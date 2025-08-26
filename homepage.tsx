@@ -86,7 +86,7 @@ export default function Component() {
     uneeqReportData,
     isRequestingReport,
     requestReport
-  } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText)
+  } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText, selectedPersonaId)
 
   const CORRECT_PIN = "1234"
 

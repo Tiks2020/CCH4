@@ -22,7 +22,7 @@ declare class Uneeq {
 const scriptSrc = 'https://cdn.uneeq.io/hosted-experience/deploy/index.js';
 let uneeqScriptStatus = 'idle';
 
-export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boolean, localShowAssessmentScale?: boolean, showLargeText?: boolean) => {
+export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boolean, localShowAssessmentScale?: boolean, showLargeText?: boolean, selectedPersonaId?: string) => {
   const [readyToStart, setReadyToStart] = useState(false);
   const [avatarLive, setAvatarLive] = useState(false);
   const [avatarThinking, setAvatarThinking] = useState(false);
@@ -167,7 +167,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
         // TODO: Move default options to config or env variables
         const defaultOptions = {
           connectionUrl: 'https://api.uneeq.io',
-          personaId: '90a9c3ab-e0db-4ee8-b159-9d264e0f3dab',
+          personaId: selectedPersonaId || '62e50c7d-0f01-44b2-80ce-1467a665ec31',
           displayCallToAction: false,
           renderContent: true,
           mobileViewWidthBreakpoint: 900,
@@ -249,7 +249,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       
       checkContainer();
     }
-  }, [uneeqScriptStatus, configOverride, showClosedCaptions, showLargeText, isReinitializing]);
+  }, [uneeqScriptStatus, configOverride, showClosedCaptions, showLargeText, isReinitializing, selectedPersonaId]);
 
   // 🔄 REACTIVE CONFIGURATION UPDATE: Update Uneeq configuration when toggle states change
   // This ensures captionsPosition is updated without re-initialization
