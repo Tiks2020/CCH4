@@ -324,16 +324,53 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             console.log('SpeechEvent value: ', eventValue);
             setLastResponse(eventValue);
             
-            // Check if SpeechEvent contains custom_event XML to show assessment scale
-            if (eventValue && typeof eventValue === 'string' && eventValue.includes('<uneeq:custom_event name="question_1" />')) {
-              console.log('✅ Found custom_event XML in SpeechEvent - showing assessment scale');
-              setInternalShowAssessmentScale(true);
+            // Handle explicit commands from eventValue
+            if (typeof eventValue === 'string') {
+              switch (true) {
+                case eventValue === 'showSurvey': {
+                  console.log('🟢 SpeechEvent command: showSurvey → displaying assessment scale');
+                  setInternalShowAssessmentScale(true);
+                  break;
+                }
+                case eventValue === 'endSession': {
+                  console.log('🟠 SpeechEvent command: endSession → ending session');
+                  try {
+                    if (typeof endSession === 'function') {
+                      endSession();
+                    } else if (uneeqInstance && typeof uneeqInstance.endSession === 'function') {
+                      uneeqInstance.endSession();
+                    }
+                  } catch (e) {
+                    console.warn('Failed to end session from SpeechEvent', e);
+                  }
+                  break;
+                }
+                case /^question_\d+/.test(eventValue): {
+                  const match = eventValue.match(/^question_(\d+)/);
+                  const questionNum = match ? parseInt(match[1], 10) : NaN;
+                  if (!Number.isNaN(questionNum)) {
+                    console.log(`🟦 SpeechEvent command: question_ → setting question ${questionNum} and showing scale`);
+                    setCurrentQuestionNumber(questionNum);
+                    setInternalShowAssessmentScale(true);
+                  }
+                  break;
+                }
+                default:
+                  break;
+              }
             }
+            
+            // Check if SpeechEvent contains custom_event XML to show assessment scale
+            // if (eventValue && typeof eventValue === 'string' && eventValue.includes('<uneeq:custom_event name="question_1" />')) {
+            //   console.log('✅ Found custom_event XML in SpeechEvent - showing assessment scale');
+            //   setInternalShowAssessmentScale(true);
+            // }
             break;
             
         case 'PromptResult':
             console.log('PromptResult received - Full message:', msg);
             // Log the actual text content to see if XML is there
+            /** 
             if (msg.promptResult && msg.promptResult.response && msg.promptResult.response.text) {
               console.log('PromptResult text:', msg.promptResult.response.text);
               // Check for XML in the response text
@@ -392,6 +429,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
                 }
               }
             }
+              */
             break;
 
         case 'AvatarStoppedSpeaking':
