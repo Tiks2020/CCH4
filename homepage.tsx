@@ -66,7 +66,7 @@ export default function Component() {
   const [selectedCharacterIndex, setSelectedCharacterIndex] = useState(0)
   const [selectedPersonaId, setSelectedPersonaId] = useState("62e50c7d-0f01-44b2-80ce-1467a665ec31")
   const [selectedPersonaName, setSelectedPersonaName] = useState("Mei")
-  const [selectedPreviewImage, setSelectedPreviewImage] = useState("/images/mei_preview.jpg")
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState("images/mei_preview.jpg")
 
   // Initialize Uneeq hook
   const { 
@@ -1091,10 +1091,10 @@ export default function Component() {
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { name: "Mei", personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "/images/mei_thumb.png", preview: "/images/mei_preview.jpg" },
-                    { name: "Ethan", personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "/images/ethan_thumb.png", preview: "/images/ethan_preview.jpg" },
-                    { name: "Sara", personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "/images/sara_thumb.png", preview: "/images/sara_preview.jpg" },
-                    { name: "Tomas", personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "/images/tomas_thumb.png", preview: "/images/tomas_preview.jpg" },
+                    { name: "Mei", personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "images/mei_thumb.png", preview: "images/mei_preview.jpg" },
+                    { name: "Ethan", personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "images/ethan_thumb.png", preview: "images/ethan_preview.jpg" },
+                    { name: "Sara", personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "images/sara_thumb.png", preview: "images/sara_preview.jpg" },
+                    { name: "Tomas", personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "images/tomas_thumb.png", preview: "images/tomas_preview.jpg" },
                   ].map((char, i) => (
                     <div
                       key={i}
