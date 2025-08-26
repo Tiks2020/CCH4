@@ -186,7 +186,7 @@ export default function Component() {
       startTime: sessionStartTime ? sessionStartTime.toLocaleString() : "",
       endTime: "", // Will be set when session ends
       duration: sessionStartTime ? `${Math.floor((Date.now() - sessionStartTime.getTime()) / 60000)} minutes` : "",
-      character: "Sunny the Tiger",
+      character: selectedPersonaName,
       hasCriticalResponses: reportQuestions.some(q => q.flagged),
       criticalCount: reportQuestions.filter(q => q.flagged).length,
       totalScore: reportTotal,
@@ -199,7 +199,7 @@ export default function Component() {
         isCritical: q.flagged,
       })),
     };
-  }, [patientId, sessionStartTime, uneeqReportData])
+  }, [patientId, sessionStartTime, uneeqReportData, selectedPersonaName])
 
   const criticalResponses = sessionAnalytics.responses.filter((r) => r.isCritical)
 
