@@ -505,8 +505,8 @@ export default function Component() {
                 className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 mt-2 transition-all duration-500`}
               >
                 {isSessionStarting
-                  ? "Preparing therapeutic environment..."
-                  : "Please enter your clinician PIN to begin the therapeutic session with the patient."}
+                  ? "Preparing conversation environment..."
+                  : "Please enter your clinician PIN to begin the conversation session with the patient."}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -610,7 +610,7 @@ export default function Component() {
                 End Session Authorization
               </CardTitle>
               <p className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 mt-2`}>
-                Please enter your clinician PIN to end the therapeutic session.
+                Please enter your clinician PIN to end the session.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -691,7 +691,7 @@ export default function Component() {
                   </div>
                   <div>
                     <CardTitle className="text-xl text-white">Session Analytics</CardTitle>
-                    <p className="text-sm text-gray-400">Therapeutic Assessment Results</p>
+                    <p className="text-sm text-gray-400">PHQ-9 Questionnaire Results</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1183,7 +1183,7 @@ export default function Component() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 mb-2 block font-normal`}>
-                    Therapeutic Approach
+                    Approach
                   </Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button

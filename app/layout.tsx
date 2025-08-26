@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Cincinnati Children's Hospital",
-  description: "Digital human video call application for therapeutic sessions",
+  description: "Digital human video call application for administering PHQ-9 questionnaire sessions",
     generator: 'v0.dev'
 }
 
