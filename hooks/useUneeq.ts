@@ -31,6 +31,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
   const [internalShowAssessmentScale, setInternalShowAssessmentScale] = useState(false);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(1);
   const [isReinitializing, setIsReinitializing] = useState(false); // New state for re-initialization
+  // Overlay control when ending via SpeechEvent
+  const [dimAvatarActive, setDimAvatarActive] = useState(false);
 
   uneeqScriptStatus = useScript(scriptSrc, {
     id: 'uneeq',
@@ -157,7 +159,6 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
           personaId: '90a9c3ab-e0db-4ee8-b159-9d264e0f3dab',
           displayCallToAction: false,
           renderContent: true,
-          welcomePrompt: "Hello! I'm Sunny the Tiger, your therapeutic companion. How are you feeling today?",
           mobileViewWidthBreakpoint: 900,
           layoutMode: 'contained',
           cameraAnchorHorizontal: 'center',
@@ -328,18 +329,20 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             if (typeof eventValue === 'string') {
               switch (true) {
                 case eventValue === 'showSurvey': {
-                  console.log('🟢 SpeechEvent command: showSurvey → displaying assessment scale');
-                  setInternalShowAssessmentScale(true);
+                  console.log('🟢 SpeechEvent command: showSurvey');
                   break;
                 }
                 case eventValue === 'endSession': {
-                  console.log('🟠 SpeechEvent command: endSession → hiding user input interface');
+                  console.log('🟠 SpeechEvent command: endSession → hiding user input interface, will dim after avatar stops speaking');
                   try {
                     if (uneeqInstance && typeof (uneeqInstance as any).setShowUserInputInterface === 'function') {
                       (uneeqInstance as any).setShowUserInputInterface(false);
                     } else {
                       console.log('setShowUserInputInterface is not available on uneeqInstance');
                     }
+                    // Queue dimming once avatar finishes current speech
+                    setDimAvatarActive(true);
+                    console.log('🟣 Dim overlay added');
                   } catch (e) {
                     console.warn('Failed to hide user input interface from SpeechEvent', e);
                   }
@@ -528,6 +531,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     // Reset assessment scale state when ending session
     setCurrentQuestionNumber(1);
     setInternalShowAssessmentScale(false);
+    setDimAvatarActive(false);
     console.log('🔍 RESET - Assessment Scale State Reset on Session End:', {
       currentQuestionNumber: 1,
       internalShowAssessmentScale: false,
@@ -573,5 +577,6 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     stopSpeaking,
     sendMessage,
     uneeqInstance,
+    dimAvatarActive,
   };
 }; 

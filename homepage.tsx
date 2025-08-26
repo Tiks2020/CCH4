@@ -74,7 +74,8 @@ export default function Component() {
     lastResponse,
     startSession, 
     endSession,
-    sendMessage
+    sendMessage,
+    dimAvatarActive
   } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText)
 
   const CORRECT_PIN = "1234"
@@ -819,6 +820,9 @@ export default function Component() {
                       isInConversation ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                   />
+                  {dimAvatarActive && (
+                    <div className="absolute inset-0 bg-black/80 pointer-events-none z-40" />
+                  )}
                   
                   {/* Loading Screen - Shows while Sophie is initializing */}
                   {showLoadingScreen && (
