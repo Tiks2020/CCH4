@@ -164,12 +164,12 @@ export default function Component() {
     }
   }, [isInConversation, readyToStart, avatarLive, startSession, endSession])
 
-  // Hide loading screen after Sophie is live and minimum time has passed
+  // Hide loading screen after digital human is live and minimum time has passed
   useEffect(() => {
     if (avatarLive && showLoadingScreen) {
       const timer = setTimeout(() => {
         setShowLoadingScreen(false);
-      }, 4000); // Show loading screen for at least 4 seconds to ensure Sophie is visible
+      }, 4000); // Show loading screen for at least 4 seconds to ensure digital human is visible
       return () => clearTimeout(timer);
     }
   }, [avatarLive, showLoadingScreen]);
@@ -928,7 +928,7 @@ export default function Component() {
                     </div>
                   )}
                   
-                  {/* Loading Screen - Shows while Sophie is initializing */}
+                  {/* Loading Screen - Shows while digital human is initializing */}
                   {showLoadingScreen && (
                     <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center z-50">
                       <div className="text-center space-y-6">
@@ -942,11 +942,11 @@ export default function Component() {
                         
                         {/* Loading text */}
                                                        <div className="space-y-2">
-                                 <h3 className="text-xl font-semibold text-white">Initializing Sophie</h3>
+                                 <h3 className="text-xl font-semibold text-white">Initializing {selectedPersonaName}</h3>
                                  <p className="text-gray-300 text-sm max-w-xs mx-auto">
                                    {scriptStatus === 'loading' ? 'Loading Uneeq SDK...' :
                                    scriptStatus === 'ready' ? 'Connecting to digital human...' :
-                                   'Preparing therapeutic environment...'}
+                                   'Preparing conversation environment...'}
                                  </p>
 
                                </div>
