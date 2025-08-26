@@ -330,6 +330,10 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       const msg = event.detail;
       console.log('Uneeq message type:', msg.uneeqMessageType, 'Full message:', msg);
       switch (msg.uneeqMessageType) {
+        case 'PromptRequest':
+          console.log('PromptRequest received - asserting showAssessmentScale to false');
+          setInternalShowAssessmentScale(false);
+          break;
         case 'SpeechEvent':
             // TODO: Handle SpeechEvent (Say to cursor to get get EventValue show button for example) 
             const eventValue = msg.speechEvent.param_value;
@@ -552,7 +556,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       setTimeout(() => {
         console.log('Testing: Sending welcome message to trigger digital human...');
         if (uneeqInstance) {
-          uneeqInstance.chatPrompt("Hello, can you start the session?");
+          // uneeqInstance.chatPrompt("Hello, can you start the session?");
           
           // Debug: Check what properties are available on the uneeqInstance
           console.log('Uneeq instance properties:', Object.keys(uneeqInstance));
@@ -599,9 +603,12 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       if (uneeqInstance && avatarLive) {
         console.log(`Calling uneeqInstance.chatPrompt('${message}')`);
         uneeqInstance.chatPrompt(message);
+        
+        // Hide assessment scale when user sends any input
+        setInternalShowAssessmentScale(false);
       }
     },
-    [uneeqInstance, avatarLive]
+    [uneeqInstance, avatarLive, setInternalShowAssessmentScale]
   );
 
   const requestReport = useCallback(() => {
