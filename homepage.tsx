@@ -1081,18 +1081,17 @@ export default function Component() {
                   className={`${showLargeText ? "text-base" : "text-sm"} font-medium flex items-center gap-2 text-white`}
                 >
                   <Sparkles className="w-4 h-4 text-orange-400" />
-                  Therapeutic Character
+                  Character
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { emoji: "🐅", name: "Sunny", type: "Tiger", active: true },
-                    { emoji: "🐻", name: "Buddy", type: "Bear", active: false },
-                    { emoji: "🦊", name: "Foxy", type: "Fox", active: false },
-                    { emoji: "🐨", name: "Kobi", type: "Koala", active: false },
-                    { emoji: "🐼", name: "Panda", type: "Panda", active: false },
-                    { emoji: "🦁", name: "Leo", type: "Lion", active: false },
+                    { name: "Mei", active: true, personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Mei_01.png" },
+                    { name: "Ethan", active: false, personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Ethan_01.png" },
+                    { name: "Sara", active: false, personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Sara_01.png" },
+                    { name: "Tomas", active: false, personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Thomas_01.png" },
+                    
                   ].map((char, i) => (
                     <div
                       key={i}
@@ -1102,11 +1101,11 @@ export default function Component() {
                           : "border-gray-600 hover:border-gray-500 hover:bg-gray-700/50"
                       }`}
                     >
-                      <span className="text-lg mb-1">{char.emoji}</span>
+                      
                       <span className={`${showLargeText ? "text-base" : "text-sm"} text-gray-200 font-medium`}>
                         {char.name}
                       </span>
-                      <span className={`${showLargeText ? "text-sm" : "text-xs"} text-gray-400`}>{char.type}</span>
+                      
                     </div>
                   ))}
                 </div>
