@@ -429,7 +429,7 @@ export default function Component() {
             <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-lg flex items-center justify-center">
               <Video className="w-5 h-5 text-white" />
             </div>
-            <h1 className={`${showLargeText ? "text-2xl" : "text-xl"} font-semibold`}>DigitalBuddy</h1>
+            <h1 className={`${showLargeText ? "text-2xl" : "text-xl"} font-semibold`}>Cincinnati Children's Hospital</h1>
           </div>
           <div className="flex items-center gap-4">
             <div
@@ -1095,17 +1095,22 @@ export default function Component() {
                   ].map((char, i) => (
                     <div
                       key={i}
-                      className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                      className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-end cursor-pointer transition-all relative ${
                         char.active
-                          ? "border-orange-400 bg-gradient-to-br from-orange-400/20 to-yellow-400/20 shadow-lg"
-                          : "border-gray-600 hover:border-gray-500 hover:bg-gray-700/50"
+                          ? "border-orange-400 shadow-lg"
+                          : "border-gray-600 hover:border-gray-500"
                       }`}
+                      style={{
+                        backgroundImage: `url(${char.thumbnail})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                      }}
                     >
-                      
-                      <span className={`${showLargeText ? "text-base" : "text-sm"} text-gray-200 font-medium`}>
+                      <div className="absolute inset-0 bg-black/50 rounded-xl" />
+                      <span className={`${showLargeText ? "text-base" : "text-sm"} text-white font-medium relative z-10 mb-2`}>
                         {char.name}
                       </span>
-                      
                     </div>
                   ))}
                 </div>
