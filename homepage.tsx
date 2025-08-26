@@ -963,7 +963,7 @@ export default function Component() {
                   {/* Tiger Image as background - Only visible in preview mode */}
                   {!isInConversation && (
                     <img
-                      src="/images/sunny-tiger.png"
+                      src="/images/mei_preview.jpg"
                       alt="Sunny the Tiger"
                       className="absolute inset-0 w-full h-full object-cover object-center"
                     />
@@ -1090,10 +1090,10 @@ export default function Component() {
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { name: "Mei", personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Mei_01.png" },
-                    { name: "Ethan", personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Ethan_01.png" },
-                    { name: "Sara", personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Sara_01.png" },
-                    { name: "Tomas", personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Thomas_01.png" },
+                    { name: "Mei", personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "/images/mei_thumb.png", preview: "/images/mei_preview.jpg" },
+                    { name: "Ethan", personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "/images/ethan_thumb.png", preview: "/images/ethan_preview.jpg" },
+                    { name: "Sara", personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "/images/sara_thumb.png", preview: "/images/sara_preview.jpg" },
+                    { name: "Tomas", personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "/images/tomas_thumb.png", preview: "/images/tomas_preview.jpg" },
                   ].map((char, i) => (
                     <div
                       key={i}
