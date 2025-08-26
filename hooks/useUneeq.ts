@@ -170,6 +170,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
           personaId: selectedPersonaId || '62e50c7d-0f01-44b2-80ce-1467a665ec31',
           displayCallToAction: false,
           renderContent: true,
+          welcomePrompt: 'start',
           mobileViewWidthBreakpoint: 900,
           layoutMode: 'contained',
           cameraAnchorHorizontal: 'center',
