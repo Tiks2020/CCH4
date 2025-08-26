@@ -333,15 +333,15 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
                   break;
                 }
                 case eventValue === 'endSession': {
-                  console.log('🟠 SpeechEvent command: endSession → ending session');
+                  console.log('🟠 SpeechEvent command: endSession → hiding user input interface');
                   try {
-                    if (typeof endSession === 'function') {
-                      endSession();
-                    } else if (uneeqInstance && typeof uneeqInstance.endSession === 'function') {
-                      uneeqInstance.endSession();
+                    if (uneeqInstance && typeof (uneeqInstance as any).setShowUserInputInterface === 'function') {
+                      (uneeqInstance as any).setShowUserInputInterface(false);
+                    } else {
+                      console.log('setShowUserInputInterface is not available on uneeqInstance');
                     }
                   } catch (e) {
-                    console.warn('Failed to end session from SpeechEvent', e);
+                    console.warn('Failed to hide user input interface from SpeechEvent', e);
                   }
                   break;
                 }
