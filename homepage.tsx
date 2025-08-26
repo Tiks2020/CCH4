@@ -75,7 +75,9 @@ export default function Component() {
     startSession, 
     endSession,
     sendMessage,
-    dimAvatarActive
+    dimAvatarActive,
+    showSurveyModal,
+    setShowSurveyModal
   } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText)
 
   const CORRECT_PIN = "1234"
@@ -822,6 +824,67 @@ export default function Component() {
                   />
                   {dimAvatarActive && (
                     <div className="absolute inset-0 bg-black/80 pointer-events-none z-40" />
+                  )}
+
+                  {/* Survey Modal Overlay */}
+                  {showSurveyModal && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/80" />
+                      <div className="relative bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                        <h3 className="text-xl font-semibold text-white mb-4">Quick Survey</h3>
+                        <div className="space-y-4 text-gray-200">
+                          <div>
+                            <p className="mb-2">Did you like talking to me today?</p>
+                            <div className="flex gap-6">
+                              <label className="flex items-center gap-2">
+                                <input type="radio" name="q1" value="Yes" className="accent-orange-500" />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center gap-2">
+                                <input type="radio" name="q1" value="No" className="accent-orange-500" />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="mb-2">Would you like to talk to me again next time?</p>
+                            <div className="flex gap-6">
+                              <label className="flex items-center gap-2">
+                                <input type="radio" name="q2" value="Yes" className="accent-orange-500" />
+                                <span>Yes</span>
+                              </label>
+                              <label className="flex items-center gap-2">
+                                <input type="radio" name="q2" value="No" className="accent-orange-500" />
+                                <span>No</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                          <button
+                            className="px-4 py-2 rounded-md border border-gray-600 text-gray-200 hover:bg-gray-700"
+                            onClick={() => {
+                              sendMessage('cancelled')
+                              setShowSurveyModal(false)
+                            }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="px-4 py-2 rounded-md bg-orange-500 hover:bg-orange-600 text-white"
+                            onClick={() => {
+                              const q1 = (document.querySelector('input[name="q1"]:checked') as HTMLInputElement | null)?.value || 'No response'
+                              const q2 = (document.querySelector('input[name="q2"]:checked') as HTMLInputElement | null)?.value || 'No response'
+                              const payload = `Survey Response:\n- Did you like talking to me today?: ${q1}\n- Would you like to talk to me again next time?: ${q2}`
+                              sendMessage(payload)
+                              setShowSurveyModal(false)
+                            }}
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
                   
                   {/* Loading Screen - Shows while Sophie is initializing */}

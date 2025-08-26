@@ -33,6 +33,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
   const [isReinitializing, setIsReinitializing] = useState(false); // New state for re-initialization
   // Overlay control when ending via SpeechEvent
   const [dimAvatarActive, setDimAvatarActive] = useState(false);
+  const [showSurveyModal, setShowSurveyModal] = useState(false);
 
   uneeqScriptStatus = useScript(scriptSrc, {
     id: 'uneeq',
@@ -330,6 +331,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
               switch (true) {
                 case eventValue === 'showSurvey': {
                   console.log('🟢 SpeechEvent command: showSurvey');
+                  setShowSurveyModal(true);
                   break;
                 }
                 case eventValue === 'endSession': {
@@ -578,5 +580,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     sendMessage,
     uneeqInstance,
     dimAvatarActive,
+    showSurveyModal,
+    setShowSurveyModal,
   };
 }; 
