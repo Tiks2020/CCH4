@@ -63,6 +63,9 @@ export default function Component() {
   const [isModalOpening, setIsModalOpening] = useState(false)
   const [showLoadingScreen, setShowLoadingScreen] = useState(false)
   const [isWaitingForReportBeforeEnd, setIsWaitingForReportBeforeEnd] = useState(false)
+  const [selectedCharacterIndex, setSelectedCharacterIndex] = useState(0)
+  const [selectedPersonaId, setSelectedPersonaId] = useState("62e50c7d-0f01-44b2-80ce-1467a665ec31")
+  const [selectedPersonaName, setSelectedPersonaName] = useState("Mei")
 
   // Initialize Uneeq hook
   const { 
@@ -1087,16 +1090,20 @@ export default function Component() {
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { name: "Mei", active: true, personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Mei_01.png" },
-                    { name: "Ethan", active: false, personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Ethan_01.png" },
-                    { name: "Sara", active: false, personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Sara_01.png" },
-                    { name: "Tomas", active: false, personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Thomas_01.png" },
-                    
+                    { name: "Mei", personaId: "62e50c7d-0f01-44b2-80ce-1467a665ec31", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Mei_01.png" },
+                    { name: "Ethan", personaId: "f19a9fbc-eef6-4d15-8887-34c2a5ee3449", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Ethan_01.png" },
+                    { name: "Sara", personaId: "d1d6ef17-a319-4bd9-88bc-8d1c7214764e", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Sara_01.png" },
+                    { name: "Tomas", personaId: "90a9c3ab-e0db-4ee8-b159-9d264e0f3dab", thumbnail: "https://cdn.uneeq.io/admin/assets/img/preview/Dell_Thomas_01.png" },
                   ].map((char, i) => (
                     <div
                       key={i}
+                      onClick={() => {
+                        setSelectedCharacterIndex(i)
+                        setSelectedPersonaId(char.personaId)
+                        setSelectedPersonaName(char.name)
+                      }}
                       className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-end cursor-pointer transition-all relative ${
-                        char.active
+                        selectedCharacterIndex === i
                           ? "border-orange-400 shadow-lg"
                           : "border-gray-600 hover:border-gray-500"
                       }`}
