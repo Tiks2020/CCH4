@@ -66,6 +66,7 @@ export default function Component() {
   const [selectedCharacterIndex, setSelectedCharacterIndex] = useState(0)
   const [selectedPersonaId, setSelectedPersonaId] = useState("62e50c7d-0f01-44b2-80ce-1467a665ec31")
   const [selectedPersonaName, setSelectedPersonaName] = useState("Mei")
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState("/images/mei_preview.jpg")
 
   // Initialize Uneeq hook
   const { 
@@ -960,11 +961,11 @@ export default function Component() {
                     </div>
                   )}
                   
-                  {/* Tiger Image as background - Only visible in preview mode */}
+                  {/* Character Preview Image - Only visible in preview mode */}
                   {!isInConversation && (
                     <img
-                      src="/images/mei_preview.jpg"
-                      alt="Sunny the Tiger"
+                      src={selectedPreviewImage}
+                      alt={selectedPersonaName}
                       className="absolute inset-0 w-full h-full object-cover object-center"
                     />
                   )}
@@ -1101,6 +1102,7 @@ export default function Component() {
                         setSelectedCharacterIndex(i)
                         setSelectedPersonaId(char.personaId)
                         setSelectedPersonaName(char.name)
+                        setSelectedPreviewImage(char.preview)
                       }}
                       className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-end cursor-pointer transition-all relative ${
                         selectedCharacterIndex === i
