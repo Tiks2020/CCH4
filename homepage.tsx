@@ -62,6 +62,7 @@ export default function Component() {
   const [isSessionStarting, setIsSessionStarting] = useState(false)
   const [isModalOpening, setIsModalOpening] = useState(false)
   const [showLoadingScreen, setShowLoadingScreen] = useState(false)
+  const [isWaitingForReportBeforeEnd, setIsWaitingForReportBeforeEnd] = useState(false)
 
   // Initialize Uneeq hook
   const { 
@@ -77,7 +78,10 @@ export default function Component() {
     sendMessage,
     dimAvatarActive,
     showSurveyModal,
-    setShowSurveyModal
+    setShowSurveyModal,
+    uneeqReportData,
+    isRequestingReport,
+    requestReport
   } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText)
 
   const CORRECT_PIN = "1234"
@@ -167,24 +171,31 @@ export default function Component() {
   }, [avatarLive, showLoadingScreen]);
 
   // Real session analytics data based on actual assessment responses
-  const sessionAnalytics = useMemo(() => ({
-    sessionId: "SES-2024-001",
-    patientId: patientId || "No Patient ID",
-    startTime: sessionStartTime ? sessionStartTime.toLocaleString() : "",
-    endTime: "", // Will be set when session ends
-    duration: sessionStartTime ? `${Math.floor((Date.now() - sessionStartTime.getTime()) / 60000)} minutes` : "",
-    character: "Sunny the Tiger",
-    hasCriticalResponses: assessmentResponses.some(r => r.isCritical),
-    criticalCount: assessmentResponses.filter(r => r.isCritical).length,
-    responses: assessmentResponses.map(response => ({
-      question: response.question,
-      options: ["Not at all", "Several days", "More than half the days", "Nearly every day", "Skip"],
-      selected: response.score === "skip" ? 4 : response.score,
-      selectedText: response.scoreText,
-      timestamp: response.timestamp,
-      isCritical: response.isCritical,
-    })),
-  }), [patientId, sessionStartTime, assessmentResponses])
+  const sessionAnalytics = useMemo(() => {
+    // Use Uneeq report data if available, fallback to local data
+    const reportQuestions = uneeqReportData?.questions || [];
+    const reportTotal = uneeqReportData?.total || 0;
+    
+    return {
+      sessionId: "SES-2024-001",
+      patientId: patientId || "No Patient ID",
+      startTime: sessionStartTime ? sessionStartTime.toLocaleString() : "",
+      endTime: "", // Will be set when session ends
+      duration: sessionStartTime ? `${Math.floor((Date.now() - sessionStartTime.getTime()) / 60000)} minutes` : "",
+      character: "Sunny the Tiger",
+      hasCriticalResponses: reportQuestions.some(q => q.flagged),
+      criticalCount: reportQuestions.filter(q => q.flagged).length,
+      totalScore: reportTotal,
+      responses: reportQuestions.map(q => ({
+        question: getQuestionText(q.question),
+        options: ["Not at all", "Several days", "More than half the days", "Nearly every day", "Skip"],
+        selected: q.score,
+        selectedText: ["Not at all", "Several days", "More than half the days", "Nearly every day", "Skip"][q.score] || "Unknown",
+        timestamp: new Date().toLocaleTimeString(), // Use current time since we don't have timestamps
+        isCritical: q.flagged,
+      })),
+    };
+  }, [patientId, sessionStartTime, uneeqReportData])
 
   const criticalResponses = sessionAnalytics.responses.filter((r) => r.isCritical)
 
@@ -265,7 +276,12 @@ export default function Component() {
         setPin(["", "", "", ""])
         setPinError("")
         setIsSessionStarting(false)
-      }, 800) // Match the animation duration
+        
+        // Request report from Uneeq after session starts
+        setTimeout(() => {
+          requestReport();
+        }, 1000); // Wait for session to be fully established
+      }, 800)
     } else {
       setPinError("Incorrect PIN. Please contact your administrator for access.")
       setPin(["", "", "", ""])
@@ -285,15 +301,13 @@ export default function Component() {
       // Start the transition animation
       setTimeout(() => {
         setShowEndSessionDialog(false)
-        setIsInConversation(false)
         setEndPin(["", "", "", ""])
         setEndPinError("")
         setIsModalClosing(false)
 
-        // Show analytics after transition
-        setTimeout(() => {
-          setShowAnalytics(true)
-        }, 300)
+        // Request report first, then end session after receiving it
+        setIsWaitingForReportBeforeEnd(true)
+        requestReport()
       }, 400)
     } else {
       setEndPinError("Incorrect PIN. Please contact your administrator for access.")
@@ -388,6 +402,22 @@ export default function Component() {
   const handleDownloadReport = () => {
     // Implement download report functionality here
   }
+
+  // Effect to handle ending session after report is received
+  useEffect(() => {
+    if (isWaitingForReportBeforeEnd && uneeqReportData && !isRequestingReport) {
+      console.log('📊 Report received, now ending session...')
+      setIsWaitingForReportBeforeEnd(false)
+      
+      // End the session
+      setIsInConversation(false)
+      
+      // Show analytics after a short delay
+      setTimeout(() => {
+        setShowAnalytics(true)
+      }, 300)
+    }
+  }, [isWaitingForReportBeforeEnd, uneeqReportData, isRequestingReport])
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-['gg_sans','Whitney','Helvetica_Neue',Helvetica,Arial,sans-serif]">
@@ -697,37 +727,48 @@ export default function Component() {
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-3">
                   <p className="text-xs text-gray-400 uppercase tracking-wide">Questions</p>
-                  <p className="text-sm font-medium text-white">{assessmentResponses.length}/9</p>
+                  <p className="text-sm font-medium text-white">{sessionAnalytics.responses.length}/9</p>
+                </div>
+                <div className="bg-gray-700/50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 uppercase tracking-wide">Total Score</p>
+                  <p className="text-sm font-medium text-white">{sessionAnalytics.totalScore || "N/A"}</p>
                 </div>
               </div>
 
               {/* Assessment Responses */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white mb-4">Assessment Responses</h3>
-                {assessmentResponses.length === 0 ? (
+                {isRequestingReport || isWaitingForReportBeforeEnd ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-gray-300">
+                      {isWaitingForReportBeforeEnd ? "Retrieving final session data..." : "Loading session report..."}
+                    </p>
+                  </div>
+                ) : sessionAnalytics.responses.length === 0 ? (
                   <p className="text-gray-400 text-center py-8">No assessment responses yet. Complete the assessment questions to see responses here.</p>
                 ) : (
-                  assessmentResponses.map((response, index) => (
+                  sessionAnalytics.responses.map((response, index) => (
                   <div key={index} className="bg-gray-700/30 rounded-lg p-4 border border-gray-600/50">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-white mb-2">
-                          Question {response.questionNumber}: {response.question}
+                          {response.question}
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {["Not at all", "Several days", "More than half the days", "Nearly every day", "Skip"].map((option, optionIndex) => (
                             <div
                               key={optionIndex}
                               className={`p-2 rounded-lg border transition-all ${
-                                optionIndex === (response.score === "skip" ? 4 : response.score)
-                                  ? `bg-gradient-to-r ${getResponseColor(response.score === "skip" ? 4 : response.score, response.isCritical)} border-white/20 text-white`
+                                optionIndex === response.selected
+                                  ? `bg-gradient-to-r ${getResponseColor(response.selected, response.isCritical)} border-white/20 text-white`
                                   : "bg-gray-800/50 border-gray-600/30 text-gray-400"
                               }`}
                             >
                               <div className="flex items-center gap-2">
                                 <div
                                   className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
-                                    optionIndex === (response.score === "skip" ? 4 : response.score)
+                                    optionIndex === response.selected
                                       ? "bg-white/30 text-white"
                                       : "bg-gray-600/50 text-gray-500"
                                   }`}
@@ -735,7 +776,7 @@ export default function Component() {
                                   {optionIndex === 4 ? "-" : optionIndex}
                                 </div>
                                 <span className="text-sm">{option}</span>
-                                {optionIndex === (response.score === "skip" ? 4 : response.score) && (
+                                {optionIndex === response.selected && (
                                   <span className="ml-auto text-xs font-medium">✓ Selected</span>
                                 )}
                               </div>
@@ -760,13 +801,9 @@ export default function Component() {
                   <div>
                     <p className="text-gray-400">Overall Mood</p>
                     <p className="text-white font-medium">
-                      {assessmentResponses.length === 0 ? "No responses yet" :
-                       assessmentResponses.filter(r => r.score !== "skip").length === 0 ? "No scored responses" :
+                      {sessionAnalytics.responses.length === 0 ? "No responses yet" :
                        (() => {
-                         const avgScore = assessmentResponses
-                           .filter(r => r.score !== "skip")
-                           .reduce((sum, r) => sum + (r.score as number), 0) / 
-                           assessmentResponses.filter(r => r.score !== "skip").length;
+                         const avgScore = sessionAnalytics.totalScore / sessionAnalytics.responses.length;
                          if (avgScore <= 1) return "Positive";
                          if (avgScore <= 2) return "Moderate";
                          return "Concerning";
@@ -776,17 +813,17 @@ export default function Component() {
                   <div>
                     <p className="text-gray-400">Engagement Level</p>
                     <p className="text-white font-medium">
-                      {assessmentResponses.length === 0 ? "No responses yet" :
-                       assessmentResponses.length >= 6 ? "High" :
-                       assessmentResponses.length >= 3 ? "Moderate" : "Low"}
+                      {sessionAnalytics.responses.length === 0 ? "No responses yet" :
+                       sessionAnalytics.responses.length >= 6 ? "High" :
+                       sessionAnalytics.responses.length >= 3 ? "Moderate" : "Low"}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-400">Areas of Concern</p>
                     <p className="text-white font-medium">
-                      {assessmentResponses.filter(r => r.isCritical).length === 0 ? "None detected" :
-                       assessmentResponses.filter(r => r.isCritical).length === 1 ? "1 critical response" :
-                       `${assessmentResponses.filter(r => r.isCritical).length} critical responses`}
+                      {sessionAnalytics.criticalCount === 0 ? "None detected" :
+                       sessionAnalytics.criticalCount === 1 ? "1 critical response" :
+                       `${sessionAnalytics.criticalCount} critical responses`}
                     </p>
                   </div>
                 </div>

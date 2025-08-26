@@ -34,6 +34,16 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
   // Overlay control when ending via SpeechEvent
   const [dimAvatarActive, setDimAvatarActive] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
+  // Report data from Uneeq
+  const [uneeqReportData, setUneeqReportData] = useState<{
+    questions: Array<{
+      question: number;
+      score: number;
+      flagged: boolean;
+    }>;
+    total: number;
+  } | null>(null);
+  const [isRequestingReport, setIsRequestingReport] = useState(false);
 
   uneeqScriptStatus = useScript(scriptSrc, {
     id: 'uneeq',
@@ -373,9 +383,37 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             break;
             
         case 'PromptResult':
-            console.log('PromptResult received - Full message:', msg);
-            // Log the actual text content to see if XML is there
-            /** 
+          console.log('PromptResult received - Full message:', msg);
+          
+          // Handle report response
+          if (isRequestingReport && msg.promptResult?.response?.text) {
+            const response = msg.promptResult.response;
+            console.log('📊 Received report response:', response.text);
+            console.log('📊 Response final status:', response.final);
+            
+            // Only parse JSON if this is the final response
+            if (response.final === true) {
+              try {
+                const reportText = response.text;
+                console.log('📊 Parsing final report response:', reportText);
+                
+                // Parse JSON response
+                const reportData = JSON.parse(reportText);
+                console.log('📊 Parsed report data:', reportData);
+                
+                setUneeqReportData(reportData);
+                setIsRequestingReport(false);
+              } catch (e) {
+                console.warn('Failed to parse report JSON:', e);
+                setIsRequestingReport(false);
+              }
+            } else {
+              console.log('📊 Waiting for final response, current response is not final');
+            }
+          }
+          
+          // Log the actual text content to see if XML is there
+          /** 
             if (msg.promptResult && msg.promptResult.response && msg.promptResult.response.text) {
               console.log('PromptResult text:', msg.promptResult.response.text);
               // Check for XML in the response text
@@ -478,7 +516,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       //   uneeqInstance.endSession();
       // }
     };
-  }, [uneeqInstance]);
+  }, [uneeqInstance, isRequestingReport]);
 
   const startSession = useCallback(() => {
     console.log('🔍 SESSION START - Assessment Scale State:', {
@@ -565,6 +603,20 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     [uneeqInstance, avatarLive]
   );
 
+  const requestReport = useCallback(() => {
+    if (uneeqInstance && avatarLive) {
+      console.log('📊 Requesting report from Uneeq...');
+      setIsRequestingReport(true);
+      try {
+        (uneeqInstance as any).muteDigitalHuman();
+        uneeqInstance.chatPrompt("getReport");
+      } catch (e) {
+        console.warn('Failed to request report:', e);
+        setIsRequestingReport(false);
+      }
+    }
+  }, [uneeqInstance, avatarLive]);
+
   return {
     scriptStatus: uneeqScriptStatus,
     readyToStart,
@@ -582,5 +634,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     dimAvatarActive,
     showSurveyModal,
     setShowSurveyModal,
+    uneeqReportData,
+    isRequestingReport,
+    requestReport,
   };
 }; 
