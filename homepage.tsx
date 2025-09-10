@@ -24,6 +24,7 @@ import {
   BarChart3,
   Download,
   X,
+  Settings,
 } from "lucide-react"
 
 // Declare global uneeq variable
@@ -43,6 +44,7 @@ export default function Component() {
   const [showPinDialog, setShowPinDialog] = useState(false)
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [pin, setPin] = useState(["", "", "", ""])
   const [endPin, setEndPin] = useState(["", "", "", ""])
   const [pinError, setPinError] = useState("")
@@ -449,22 +451,36 @@ export default function Component() {
               {isSessionStarting ? "Initializing..." : isInConversation ? "Active Session" : "Setup Mode"}
             </div>
 
-            {/* Clinician End Session Button - Only visible during conversation */}
+            {/* Clinician Controls - Only visible during conversation */}
             {isInConversation && (
-              <Button
-                size="sm"
-                onMouseDown={handleLongPressStart}
-                onMouseUp={handleLongPressEnd}
-                onMouseLeave={handleLongPressEnd}
-                onTouchStart={handleLongPressStart}
-                onTouchEnd={handleLongPressEnd}
-                onDoubleClick={handleDoubleClick}
-                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-500/50 text-sm transition-all select-none"
-                title="Clinician: Long press or double-click to end session"
-              >
-                <Stethoscope className="w-3 h-3 mr-1" />
-                End Session
-              </Button>
+              <div className="flex items-center gap-3">
+                {/* Settings Button */}
+                <Button
+                  onClick={() => setShowSettingsModal(true)}
+                  size="sm"
+                  className="px-3 py-1 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white border border-gray-600/50 hover:border-gray-500/50 text-sm transition-all"
+                  title="Accessibility Settings"
+                >
+                  <Settings className="w-3 h-3 mr-1" />
+                  Settings
+                </Button>
+                
+                {/* End Session Button */}
+                <Button
+                  size="sm"
+                  onMouseDown={handleLongPressStart}
+                  onMouseUp={handleLongPressEnd}
+                  onMouseLeave={handleLongPressEnd}
+                  onTouchStart={handleLongPressStart}
+                  onTouchEnd={handleLongPressEnd}
+                  onDoubleClick={handleDoubleClick}
+                  className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-500/50 text-sm transition-all select-none"
+                  title="Clinician: Long press or double-click to end session"
+                >
+                  <Stethoscope className="w-3 h-3 mr-1" />
+                  End Session
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -840,13 +856,21 @@ export default function Component() {
       <div className="max-w-7xl mx-auto p-6">
         <div
           className={`grid gap-6 transition-all duration-700 ease-in-out ${
-            isInConversation ? "grid-cols-1" : "lg:grid-cols-4"
+            isInConversation 
+              ? showSettingsModal 
+                ? "grid-cols-1 lg:grid-cols-3" 
+                : "grid-cols-1"
+              : "lg:grid-cols-4"
           }`}
         >
           {/* Main Video Call Preview */}
           <div
             className={`space-y-4 transition-all duration-700 ease-in-out ${
-              isInConversation ? "col-span-1" : "lg:col-span-3"
+              isInConversation 
+                ? showSettingsModal 
+                  ? "col-span-1 lg:col-span-2" 
+                  : "col-span-1"
+                : "lg:col-span-3"
             }`}
           >
             <Card className="bg-gray-800 border-gray-700 overflow-hidden">
@@ -987,10 +1011,10 @@ export default function Component() {
 
                           <div className="space-y-2">
                             {([
-                              { value: 0, label: "Not at all", color: "from-green-500/80 to-green-600/80" },
-                              { value: 1, label: "Several days", color: "from-yellow-500/80 to-yellow-600/80" },
-                              { value: 2, label: "More than half the days", color: "from-orange-500/80 to-orange-600/80" },
-                              { value: 3, label: "Nearly every day", color: "from-red-500/80 to-red-600/80" },
+                              { value: 0, label: "Not at all", color: "from-blue-500/80 to-blue-600/80" },
+                              { value: 1, label: "Several days", color: "from-orange-500/80 to-orange-600/80" },
+                              { value: 2, label: "More than half the days", color: "from-green-500/80 to-green-600/80" },
+                              { value: 3, label: "Nearly every day", color: "from-yellow-500/80 to-yellow-600/80" },
                               { value: "skip" as const, label: "Skip", color: "from-gray-500/80 to-gray-600/80" },
                             ] as const).map((option, i) => (
                               <button
@@ -1070,6 +1094,65 @@ export default function Component() {
             )}
           </div>
 
+          {/* Settings Drawer - Only visible during conversation when opened */}
+          {isInConversation && showSettingsModal && (
+            <div className="col-span-1 lg:col-span-1">
+              <Card className="bg-gray-800 border-gray-700 h-full">
+                <CardHeader className="flex flex-row items-center justify-between pb-4">
+                  <CardTitle className={`${showLargeText ? "text-xl" : "text-lg"} text-white flex items-center gap-2`}>
+                    <Settings className="w-5 h-5 text-orange-400" />
+                    Accessibility Settings
+                  </CardTitle>
+                  <Button
+                    onClick={() => setShowSettingsModal(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 font-normal`}>
+                      Closed Captions
+                    </Label>
+                    <Switch
+                      checked={showClosedCaptions}
+                      onCheckedChange={setShowClosedCaptions}
+                      className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 font-normal`}>
+                      Large Text Mode
+                    </Label>
+                    <Switch
+                      checked={showLargeText}
+                      onCheckedChange={setShowLargeText}
+                      className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 font-normal`}>
+                      Assessment Scale
+                    </Label>
+                    <Switch
+                      checked={localShowAssessmentScale}
+                      onCheckedChange={setLocalShowAssessmentScale}
+                      className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
+                    />
+                  </div>
+                  <div className="pt-4 border-t border-gray-700">
+                    <p className={`${showLargeText ? "text-sm" : "text-xs"} text-gray-400 text-center`}>
+                      Changes take effect immediately during your session
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Settings Sidebar - Slides out during conversation */}
           <div
             className={`space-y-3 transition-all duration-700 ease-in-out ${
@@ -1116,7 +1199,9 @@ export default function Component() {
                         backgroundRepeat: 'no-repeat'
                       }}
                     >
-                      <div className="absolute inset-0 bg-black/50 rounded-xl" />
+                      <div className={`absolute inset-0 rounded-xl ${
+                        selectedCharacterIndex === i ? "bg-transparent" : "bg-black/50"
+                      }`} />
                       <span className={`${showLargeText ? "text-base" : "text-sm"} text-white font-medium relative z-10 mb-2`}>
                         {char.name}
                       </span>
