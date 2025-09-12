@@ -35,7 +35,6 @@ declare global {
 }
 
 export default function Component() {
-  const [localShowAssessmentScale, setLocalShowAssessmentScale] = useState(false)
   const [volume, setVolume] = useState([75])
   const [pitch, setPitch] = useState([50])
   const [showClosedCaptions, setShowClosedCaptions] = useState(false)
@@ -87,10 +86,58 @@ export default function Component() {
     setShowSurveyModal,
     uneeqReportData,
     isRequestingReport,
-    requestReport
-  } = useUneeq(undefined, showClosedCaptions, localShowAssessmentScale, showLargeText, selectedPersonaId)
+    requestReport,
+    toggleClosedCaptionsDirect,
+    toggleLargeTextDirect
+  } = useUneeq(undefined, showClosedCaptions, true, showLargeText, selectedPersonaId)
 
   const CORRECT_PIN = "1234"
+
+  // Direct SDK toggle handlers - bypass ALL React state and effects
+  const handleClosedCaptionsToggle = (checked: boolean) => {
+    console.log('🔄 FORCE CC', checked ? 'ON' : 'OFF');
+    console.log('🔍 window.uneeq available:', !!window.uneeq);
+    console.log('🔍 setShowClosedCaptions available:', !!(window.uneeq && window.uneeq.setShowClosedCaptions));
+    
+    // Always update UI state first for immediate visual feedback
+    setShowClosedCaptions(checked);
+    
+    // Direct access to global window.uneeq - no React state, no effects
+    if (window.uneeq && window.uneeq.setShowClosedCaptions) {
+      try {
+        window.uneeq.setShowClosedCaptions(checked);
+        console.log('✅ Direct SDK call successful');
+      } catch (error) {
+        console.log('❌ Direct SDK call failed:', error);
+      }
+    } else {
+      console.log('🔍 window.uneeq not available, UI state updated anyway');
+    }
+  }
+
+  const handleLargeTextToggle = (checked: boolean) => {
+    console.log('🔄 Large text toggle clicked:', checked);
+    console.log('🔍 window.uneeq available:', !!window.uneeq);
+    console.log('🔍 updateConfig available:', !!(window.uneeq && window.uneeq.updateConfig));
+    
+    // Always update UI state first for immediate visual feedback
+    setShowLargeText(checked);
+    
+    // Direct access to global window.uneeq - no React state, no effects
+    if (window.uneeq && window.uneeq.updateConfig) {
+      try {
+        const customStyles = checked
+          ? 'h1 { font-size: 150%; } .uneeq-closed-captions { font-size: 120%; }'
+          : '';
+        window.uneeq.updateConfig({ customStyles });
+        console.log('✅ Direct SDK call successful');
+      } catch (error) {
+        console.log('❌ Direct SDK call failed:', error);
+      }
+    } else {
+      console.log('🔍 window.uneeq not available, UI state updated anyway');
+    }
+  }
 
   // Function to get question text based on question number
   const getQuestionText = (questionNumber: number): string => {
@@ -373,7 +420,6 @@ export default function Component() {
 
   // Function to reset accessibility settings to default (off)
   const resetAccessibilitySettings = () => {
-    setLocalShowAssessmentScale(false)
     setShowClosedCaptions(false)
     setShowLargeText(false)
     setPatientId("") // Clear patient ID
@@ -994,8 +1040,8 @@ export default function Component() {
                     />
                   )}
 
-                  {/* Assessment Overlay - Glassmorphism Style - Conditionally Rendered */}
-                  {localShowAssessmentScale && (!isInConversation || showAssessmentScale) && (
+                  {/* Assessment Overlay - Glassmorphism Style - Always Visible */}
+                  {(!isInConversation || showAssessmentScale) && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 transition-all duration-500 z-10">
                       <div className="w-72 bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
                         <div className="p-4 border-b border-white/10">
@@ -1063,9 +1109,7 @@ export default function Component() {
 
                   {/* Closed Captions Preview - Uneeq Style (Only before session) */}
                   {showClosedCaptions && !isInConversation && (
-                    <div className={`absolute bottom-4 z-10 ${
-                      localShowAssessmentScale ? 'left-4' : 'right-4'
-                    }`}>
+                    <div className="absolute bottom-4 left-4 z-10">
                       <div className="bg-gray-200/20 backdrop-blur-sm rounded-sm px-3 py-2 max-w-md">
                         <p className="text-white text-sm leading-relaxed">
                           Hi there! I'm Sunny, and I'm here to chat with you today.
@@ -1119,7 +1163,7 @@ export default function Component() {
                     </Label>
                     <Switch
                       checked={showClosedCaptions}
-                      onCheckedChange={setShowClosedCaptions}
+                      onCheckedChange={handleClosedCaptionsToggle}
                       className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
                     />
                   </div>
@@ -1129,17 +1173,7 @@ export default function Component() {
                     </Label>
                     <Switch
                       checked={showLargeText}
-                      onCheckedChange={setShowLargeText}
-                      className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 font-normal`}>
-                      Assessment Scale
-                    </Label>
-                    <Switch
-                      checked={localShowAssessmentScale}
-                      onCheckedChange={setLocalShowAssessmentScale}
+                      onCheckedChange={handleLargeTextToggle}
                       className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
                     />
                   </div>
@@ -1239,16 +1273,6 @@ export default function Component() {
                   <Switch
                     checked={showLargeText}
                     onCheckedChange={setShowLargeText}
-                    className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 font-normal`}>
-                    Assessment Scale
-                  </Label>
-                  <Switch
-                    checked={localShowAssessmentScale}
-                    onCheckedChange={setLocalShowAssessmentScale}
                     className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-600"
                   />
                 </div>

@@ -16,6 +16,7 @@ declare class Uneeq {
   stopSpeaking(): void;
   chatPrompt(message: string): void;
   updateConfig?(config: any): void;
+  setShowClosedCaptions?(show: boolean): void;
 }
 
 // TODO: Move script source to config or env variable
@@ -67,30 +68,87 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     });
     
     return position;
-  }, [showClosedCaptions, localShowAssessmentScale]);
+  }, [showClosedCaptions]);
 
-  // Function to update closed captions setting
-  const updateClosedCaptions = useCallback((show: boolean) => {
-    if (uneeqInstance && typeof uneeqInstance.updateConfig === 'function') {
+  // Direct SDK call for closed captions - bypasses React effects
+  const toggleClosedCaptionsDirect = useCallback((show: boolean) => {
+    if (uneeqInstance && avatarLive) {
       try {
-        const newPosition = getCaptionsPosition();
-        uneeqInstance.updateConfig({ 
-          showClosedCaptions: show,
-          captionsPosition: newPosition
-        });
-        console.log('Updated closed captions setting:', show, 'Position:', newPosition);
+        // Try the direct SDK method first
+        if (typeof uneeqInstance.setShowClosedCaptions === 'function') {
+          uneeqInstance.setShowClosedCaptions(show);
+          console.log('✅ Direct SDK call: setShowClosedCaptions(', show, ')');
+          return true; // Success
+        } else {
+          console.log('❌ setShowClosedCaptions method not available on uneeqInstance');
+          return false; // Failed
+        }
       } catch (error) {
-        console.log('Could not update closed captions dynamically, will reinitialize on next session');
+        console.log('❌ Direct SDK call failed:', error);
+        return false; // Failed
+      }
+    }
+    return false; // No instance or not live
+  }, [uneeqInstance, avatarLive]);
+
+  // Direct SDK call for large text mode - bypasses React effects
+  const toggleLargeTextDirect = useCallback((show: boolean) => {
+    if (uneeqInstance && avatarLive) {
+      try {
+        if (typeof uneeqInstance.updateConfig === 'function') {
+          const customStyles = show
+            ? 'h1 { font-size: 150%; } .uneeq-closed-captions { font-size: 120%; }'
+            : '';
+          uneeqInstance.updateConfig({ customStyles });
+          console.log('✅ Direct SDK call: updateConfig({ customStyles })', customStyles);
+          return true; // Success
+        } else {
+          console.log('❌ updateConfig method not available on uneeqInstance');
+          return false; // Failed
+        }
+      } catch (error) {
+        console.log('❌ Direct SDK call failed:', error);
+        return false; // Failed
+      }
+    }
+    return false; // No instance or not live
+  }, [uneeqInstance, avatarLive]);
+
+  // Function to update closed captions setting using direct SDK method
+  const updateClosedCaptions = useCallback((show: boolean) => {
+    if (uneeqInstance) {
+      try {
+        // Try the direct SDK method first
+        if (typeof uneeqInstance.setShowClosedCaptions === 'function') {
+          uneeqInstance.setShowClosedCaptions(show);
+          console.log('✅ Updated closed captions using setShowClosedCaptions:', show);
+        } else if (typeof uneeqInstance.updateConfig === 'function') {
+          // Fallback to updateConfig if setShowClosedCaptions is not available
+          const newPosition = getCaptionsPosition();
+          uneeqInstance.updateConfig({ 
+            showClosedCaptions: show,
+            captionsPosition: newPosition
+          });
+          console.log('⚠️ Updated closed captions using updateConfig fallback:', show, 'Position:', newPosition);
+        } else {
+          console.log('❌ No closed captions method available on uneeqInstance');
+        }
+      } catch (error) {
+        console.log('❌ Could not update closed captions dynamically:', error);
       }
     }
   }, [uneeqInstance, getCaptionsPosition]);
 
-  // Update closed captions when the prop changes
+  // Update closed captions when the prop changes - only during initialization, not during active sessions
   useEffect(() => {
-    if (showClosedCaptions !== undefined) {
+    console.log('🔍 Closed captions useEffect triggered:', { showClosedCaptions, avatarLive });
+    if (showClosedCaptions !== undefined && !avatarLive) {
+      console.log('🔍 Updating closed captions during initialization');
       updateClosedCaptions(showClosedCaptions);
+    } else if (avatarLive) {
+      console.log('🔍 Skipping closed captions update - session is active');
     }
-  }, [showClosedCaptions, updateClosedCaptions]);
+  }, [showClosedCaptions, updateClosedCaptions, avatarLive]);
 
   // Update position when assessment scale changes
   useEffect(() => {
@@ -243,6 +301,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
         console.log('Initializing Uneeq with options:', uneeqOptions);
         const instance = new Uneeq(uneeqOptions);
         setUneeqInstance(instance);
+        // Make instance globally available for direct SDK calls
+        (window as any).uneeq = instance;
         instance.init(); // Initialize Uneeq
         setReadyToStart(true);
         console.log('Uneeq instance created and initialized.');
@@ -250,43 +310,61 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       
       checkContainer();
     }
-  }, [uneeqScriptStatus, configOverride, showClosedCaptions, showLargeText, isReinitializing, selectedPersonaId]);
+  }, [uneeqScriptStatus, configOverride, isReinitializing, selectedPersonaId]);
 
-  // 🔄 REACTIVE CONFIGURATION UPDATE: Update Uneeq configuration when toggle states change
-  // This ensures captionsPosition is updated without re-initialization
-  useEffect(() => {
-    // Only update if Uneeq is already initialized and stable
-    if (uneeqInstance && uneeqScriptStatus === 'ready') {
-      console.log('🔄 DEBUG: Toggle states changed, checking if configuration update is possible...');
-      console.log('🔄 DEBUG: uneeqInstance type:', typeof uneeqInstance);
-      console.log('🔄 DEBUG: uneeqInstance methods:', Object.getOwnPropertyNames(uneeqInstance));
-      console.log('🔄 DEBUG: updateConfig method exists:', typeof uneeqInstance.updateConfig === 'function');
+  // 🔄 REACTIVE CONFIGURATION UPDATE: DISABLED - We now use direct SDK calls
+  // This useEffect was causing session restarts when toggle states changed
+  // Now we use direct window.uneeq calls that bypass all React effects
+  // useEffect(() => {
+  //   // Only update if Uneeq is already initialized and stable
+  //   if (uneeqInstance && uneeqScriptStatus === 'ready') {
+  //     console.log('🔄 DEBUG: Toggle states changed, checking if configuration update is possible...');
+  //     console.log('🔄 DEBUG: uneeqInstance type:', typeof uneeqInstance);
+  //     console.log('🔄 DEBUG: uneeqInstance methods:', Object.getOwnPropertyNames(uneeqInstance));
+  //     console.log('🔄 DEBUG: updateConfig method exists:', typeof uneeqInstance.updateConfig === 'function');
       
-      if (typeof uneeqInstance.updateConfig === 'function') {
-        console.log('🔄 DEBUG: Toggle states changed, updating Uneeq configuration for correct captionsPosition');
+  //     if (typeof uneeqInstance.updateConfig === 'function') {
+  //       console.log('🔄 DEBUG: Toggle states changed, updating Uneeq configuration for correct captionsPosition');
         
-        try {
-          const newPosition = getCaptionsPosition();
-          const newConfig = {
-            showClosedCaptions: showClosedCaptions || false,
-            captionsPosition: newPosition
-          };
+  //       try {
+  //         const newPosition = getCaptionsPosition();
+  //         const newConfig = {
+  //           showClosedCaptions: showClosedCaptions || false,
+  //           captionsPosition: newPosition
+  //         };
           
-          console.log('🔄 Updating Uneeq config:', newConfig);
-          uneeqInstance.updateConfig(newConfig);
-          console.log('🔄 Uneeq configuration updated successfully');
+  //         console.log('🔄 Updating Uneeq config:', newConfig);
+  //         uneeqInstance.updateConfig(newConfig);
+  //         console.log('🔄 Uneeq configuration updated successfully');
           
-        } catch (error) {
-          console.log('🔄 Could not update Uneeq configuration:', error);
-          console.log('🔄 Falling back to re-initialization approach');
-          triggerReinitialization();
-        }
-      } else {
-        console.log('🔄 DEBUG: updateConfig method not available, falling back to re-initialization');
-        triggerReinitialization();
+  //       } catch (error) {
+  //         console.log('🔄 Could not update Uneeq configuration:', error);
+  //         console.log('🔄 Falling back to re-initialization approach');
+  //         triggerReinitialization();
+  //       }
+  //     } else {
+  //       console.log('🔄 DEBUG: updateConfig method not available, falling back to re-initialization');
+  //       triggerReinitialization();
+  //     }
+  //   }
+  // }, [showClosedCaptions]); // Only watch toggle states
+
+  // Update large text mode during active sessions using direct SDK method
+  useEffect(() => {
+    if (uneeqInstance && avatarLive && typeof uneeqInstance.updateConfig === 'function') {
+      console.log('🔄 Large text mode changed, updating custom styles immediately:', showLargeText);
+      try {
+        const customStyles = showLargeText
+          ? 'h1 { font-size: 150%; } .uneeq-closed-captions { font-size: 120%; }'
+          : '';
+        console.log('🔄 Updating custom styles:', customStyles);
+        uneeqInstance.updateConfig({ customStyles });
+        console.log('🔄 Custom styles updated successfully');
+      } catch (error) {
+        console.log('🔄 Could not update custom styles:', error);
       }
     }
-  }, [localShowAssessmentScale, showClosedCaptions]); // Only watch toggle states
+  }, [showLargeText, uneeqInstance, avatarLive]);
   
   // Helper function to trigger re-initialization
   const triggerReinitialization = useCallback(() => {
@@ -645,5 +723,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     uneeqReportData,
     isRequestingReport,
     requestReport,
+    // Direct SDK call functions for immediate updates without re-initialization
+    toggleClosedCaptionsDirect,
+    toggleLargeTextDirect,
   };
 }; 
