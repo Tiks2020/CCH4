@@ -44,10 +44,13 @@ export default function Component() {
   const [showEndSessionDialog, setShowEndSessionDialog] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [showSettingsPinDialog, setShowSettingsPinDialog] = useState(false)
   const [pin, setPin] = useState(["", "", "", ""])
   const [endPin, setEndPin] = useState(["", "", "", ""])
+  const [settingsPin, setSettingsPin] = useState(["", "", "", ""])
   const [pinError, setPinError] = useState("")
   const [endPinError, setEndPinError] = useState("")
+  const [settingsPinError, setSettingsPinError] = useState("")
   const [patientId, setPatientId] = useState("")
   const [assessmentResponses, setAssessmentResponses] = useState<Array<{
     questionNumber: number;
@@ -313,6 +316,31 @@ export default function Component() {
     }
   }
 
+  const handleSettingsPinChange = (index: number, value: string) => {
+    if (value.length > 1) return // Only allow single digits
+
+    const newPin = [...settingsPin]
+    newPin[index] = value
+    setSettingsPin(newPin)
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`settings-pin-${index + 1}`)
+      nextInput?.focus()
+    }
+  }
+
+  const handleSettingsPinKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !settingsPin[index] && index > 0) {
+      const prevInput = document.getElementById(`settings-pin-${index - 1}`)
+      prevInput?.focus()
+    }
+
+    if (e.key === "Enter" && settingsPin.every((digit) => digit !== "")) {
+      handleSettingsPinSubmit()
+    }
+  }
+
   const handlePinSubmit = () => {
     const enteredPin = pin.join("")
     if (enteredPin === CORRECT_PIN) {
@@ -368,6 +396,24 @@ export default function Component() {
       // Focus first input after error
       setTimeout(() => {
         const firstInput = document.getElementById("end-pin-0")
+        firstInput?.focus()
+      }, 100)
+    }
+  }
+
+  const handleSettingsPinSubmit = () => {
+    const enteredPin = settingsPin.join("")
+    if (enteredPin === CORRECT_PIN) {
+      setShowSettingsPinDialog(false)
+      setShowSettingsModal(true)
+      setSettingsPin(["", "", "", ""])
+      setSettingsPinError("")
+    } else {
+      setSettingsPinError("Incorrect PIN. Please contact your administrator for access.")
+      setSettingsPin(["", "", "", ""])
+      // Focus first input after error
+      setTimeout(() => {
+        const firstInput = document.getElementById("settings-pin-0")
         firstInput?.focus()
       }, 100)
     }
@@ -502,7 +548,7 @@ export default function Component() {
               <div className="flex items-center gap-3">
                 {/* Settings Button */}
                 <Button
-                  onClick={() => setShowSettingsModal(true)}
+                  onClick={() => setShowSettingsPinDialog(true)}
                   size="sm"
                   className="px-3 py-1 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white border border-gray-600/50 hover:border-gray-500/50 text-sm transition-all"
                   title="Accessibility Settings"
@@ -724,6 +770,70 @@ export default function Component() {
                   variant="outline"
                   className={`${showLargeText ? "text-base" : "text-sm"} w-full border-gray-600 hover:bg-gray-700 text-white bg-transparent transition-all duration-300`}
                   disabled={isModalClosing}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Settings PIN Dialog Overlay */}
+      {showSettingsPinDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="bg-gray-800 border-gray-700 w-full max-w-xs">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Settings className="w-8 h-8 text-blue-400" />
+              </div>
+              <CardTitle className={`${showLargeText ? "text-xl" : "text-lg"} text-white`}>
+                Settings Access Authorization
+              </CardTitle>
+              <p className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 mt-2`}>
+                Please enter your clinician PIN to access settings.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className={`${showLargeText ? "text-base" : "text-sm"} text-gray-300 mb-2 block`}>
+                  Clinician PIN
+                </Label>
+                <div className="flex gap-3 justify-center mb-2">
+                  {settingsPin.map((digit, index) => (
+                    <Input
+                      key={index}
+                      id={`settings-pin-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleSettingsPinChange(index, e.target.value.replace(/\D/g, ""))}
+                      onKeyDown={(e) => handleSettingsPinKeyDown(index, e)}
+                      className={`w-12 h-12 text-center text-xl font-bold bg-gray-700 border-gray-600 text-white transition-all duration-300 ${showLargeText ? "text-2xl" : "text-xl"}`}
+                      autoFocus={index === 0}
+                    />
+                  ))}
+                </div>
+                {settingsPinError && (
+                  <p className={`${showLargeText ? "text-base" : "text-sm"} text-red-400 mt-2 text-center`}>
+                    {settingsPinError}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-3">
+                <Button
+                  onClick={handleSettingsPinSubmit}
+                  className={`${showLargeText ? "text-base" : "text-sm"} w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white transition-all duration-300`}
+                  disabled={settingsPin.some((digit) => digit === "")}
+                >
+                  Access Settings
+                </Button>
+                <Button
+                  onClick={() => setShowSettingsPinDialog(false)}
+                  variant="outline"
+                  className={`${showLargeText ? "text-base" : "text-sm"} w-full border-gray-600 hover:bg-gray-700 text-white bg-transparent transition-all duration-300`}
                 >
                   Cancel
                 </Button>
@@ -1040,8 +1150,8 @@ export default function Component() {
                     />
                   )}
 
-                  {/* Assessment Overlay - Glassmorphism Style - Always Visible */}
-                  {(!isInConversation || showAssessmentScale) && (
+                  {/* Assessment Overlay - Glassmorphism Style - Only during conversation */}
+                  {showAssessmentScale && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 transition-all duration-500 z-10">
                       <div className="w-72 bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
                         <div className="p-4 border-b border-white/10">
@@ -1151,7 +1261,7 @@ export default function Component() {
                     onClick={() => setShowSettingsModal(false)}
                     variant="ghost"
                     size="sm"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md p-1 transition-all duration-200"
                   >
                     <X className="w-4 h-4" />
                   </Button>
