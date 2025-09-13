@@ -239,7 +239,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
           enableVad: false, // Enabled for voice activity detection
           enableInterruptBySpeech: true,
           autoStart: false,
-          containedAutoLayout: true,
+          containedAutoLayout: false,
           showClosedCaptions: showClosedCaptions || false,
           captionsPosition: getCaptionsPosition(),
           customStyles: (showLargeText && showClosedCaptions ? `  
