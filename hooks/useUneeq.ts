@@ -236,14 +236,14 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
           logLevel: "warn", // Changed from "info" to reduce noise
           enableMicrophone: false, // Disabled to avoid recording errors
           showUserInputInterface: true,
-          enableVad: true, // Enabled for voice activity detection
-          enableInterruptBySpeech: false,
+          enableVad: false, // Enabled for voice activity detection
+          enableInterruptBySpeech: true,
           autoStart: false,
           containedAutoLayout: true,
           showClosedCaptions: showClosedCaptions || false,
           captionsPosition: getCaptionsPosition(),
-          customStyles: showLargeText && showClosedCaptions ? `
-            /* Target Uneeq's actual closed captions classes from DOM inspection */
+          customStyles: (showLargeText && showClosedCaptions ? `  
+          /* Target Uneeq's actual closed captions classes from DOM inspection */
             .bubble,
             [class*="bubble"],
             [class*="ng-c"],
@@ -260,7 +260,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
               line-height: 1.4 !important;
               font-weight: 500 !important;
             }
-          ` : '',
+          ` : '') + ` #unmuteBtn { transform: scale(1.5); transform-origin: center;} #muteBtn { transform: scale(1.5); transform-origin: center;} #micInitialBtn { transform: scale(1.5); transform-origin: center;} #micBlockedBtn { transform: scale(1.5); transform-origin: center;}`,
           languageStrings: {},
           customMetadata: {},
           speechRecognitionHintPhrasesBoost: 0,
