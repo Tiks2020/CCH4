@@ -263,7 +263,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             }
           ` : '') + ` #unmuteBtn { transform: scale(1.5); transform-origin: center;} #muteBtn { transform: scale(1.5); transform-origin: center;} #micInitialBtn { transform: scale(1.5); transform-origin: center;} #micBlockedBtn { transform: scale(1.5); transform-origin: center;}`,
           languageStrings: {},
-          customMetadata: {},
+          customMetadata: { selectedPersonaId },
           speechRecognitionHintPhrasesBoost: 0,
           allowResumeSession: false,
           forceTURN: false,
