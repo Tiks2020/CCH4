@@ -32,6 +32,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
   const [internalShowAssessmentScale, setInternalShowAssessmentScale] = useState(false);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number>(1);
   const [isReinitializing, setIsReinitializing] = useState(false); // New state for re-initialization
+  const [proactiveTimeoutId, setProactiveTimeoutId] = useState<NodeJS.Timeout | null>(null);
   // Overlay control when ending via SpeechEvent
   const [dimAvatarActive, setDimAvatarActive] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
@@ -376,6 +377,12 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
         case 'PromptRequest':
           console.log('PromptRequest received - asserting showAssessmentScale to false');
           setInternalShowAssessmentScale(false);
+          // Clear the proactive timeout since user is responding
+          if (proactiveTimeoutId) {
+            clearTimeout(proactiveTimeoutId);
+            setProactiveTimeoutId(null);
+            console.log('Proactive timeout cleared due to PromptRequest');
+          }
           break;
         case 'SpeechEvent':
             // TODO: Handle SpeechEvent (Say to cursor to get get EventValue show button for example) 
@@ -466,6 +473,17 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
 
         case 'AvatarStoppedSpeaking':
           console.log('AvatarStoppedSpeaking');
+          // Clear any existing timeout
+          if (proactiveTimeoutId) {
+            clearTimeout(proactiveTimeoutId);
+            setProactiveTimeoutId(null);
+          }
+          // Start 30-second timeout
+          const timeoutId = setTimeout(() => {
+            proactivePromptOnTimeout();
+            setProactiveTimeoutId(null);
+          }, 30000);
+          setProactiveTimeoutId(timeoutId);
           break;
         case 'SpeechTranscription':
           console.log('SpeechTranscription event handler firing')
@@ -506,12 +524,18 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     return () => {
       window.removeEventListener('UneeqMessage', handleUneeqMessage as EventListener);
       console.log('UneeqMessage listener removed.');
+      // Clean up proactive timeout
+      if (proactiveTimeoutId) {
+        clearTimeout(proactiveTimeoutId);
+        setProactiveTimeoutId(null);
+        console.log('Proactive timeout cleared on cleanup');
+      }
       // Optional: Clean up Uneeq instance if component unmounts while session active?
       // if (avatarLive) {
       //   uneeqInstance.endSession();
       // }
     };
-  }, [uneeqInstance, isRequestingReport]);
+  }, [uneeqInstance, isRequestingReport, proactiveTimeoutId]);
 
   const startSession = useCallback(() => {
     console.log('🔍 SESSION START - Assessment Scale State:', {
@@ -574,18 +598,31 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     });
     
     console.log('Attempting to end session...', { avatarLive });
+    // Clear proactive timeout when ending session
+    if (proactiveTimeoutId) {
+      clearTimeout(proactiveTimeoutId);
+      setProactiveTimeoutId(null);
+      console.log('Proactive timeout cleared on session end');
+    }
     if (uneeqInstance && avatarLive) {
       console.log('Calling uneeqInstance.endSession()');
       uneeqInstance.endSession();
       setAvatarLive(false);
     }
-  }, [uneeqInstance, avatarLive, currentQuestionNumber, internalShowAssessmentScale]);
+  }, [uneeqInstance, avatarLive, currentQuestionNumber, internalShowAssessmentScale, proactiveTimeoutId]);
 
   const stopSpeaking = useCallback(() => {
     if (uneeqInstance) {
       uneeqInstance.stopSpeaking();
     }
   }, [uneeqInstance]);
+
+  const proactivePromptOnTimeout = useCallback(() => {
+    console.log('Proactive timeout triggered - sending "timeout" prompt');
+    if (uneeqInstance) {
+      uneeqInstance.chatPrompt('timeout');
+    }
+  }, [uneeqInstance, avatarLive]);
 
   const sendMessage = useCallback(
     (message: string) => {
