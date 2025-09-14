@@ -233,7 +233,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
           layoutMode: 'contained',
           cameraAnchorHorizontal: 'center',
           cameraAnchorDistance: 'loose_close_up',
-          logLevel: "warn", // Changed from "info" to reduce noise
+          logLevel: "error", // Changed from "info" to reduce noise
           enableMicrophone: false, // Disabled to avoid recording errors
           showUserInputInterface: true,
           enableVad: false, // Enabled for voice activity detection
@@ -312,42 +312,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     }
   }, [uneeqScriptStatus, configOverride, isReinitializing, selectedPersonaId]);
 
-  // 🔄 REACTIVE CONFIGURATION UPDATE: DISABLED - We now use direct SDK calls
-  // This useEffect was causing session restarts when toggle states changed
-  // Now we use direct window.uneeq calls that bypass all React effects
-  // useEffect(() => {
-  //   // Only update if Uneeq is already initialized and stable
-  //   if (uneeqInstance && uneeqScriptStatus === 'ready') {
-  //     console.log('🔄 DEBUG: Toggle states changed, checking if configuration update is possible...');
-  //     console.log('🔄 DEBUG: uneeqInstance type:', typeof uneeqInstance);
-  //     console.log('🔄 DEBUG: uneeqInstance methods:', Object.getOwnPropertyNames(uneeqInstance));
-  //     console.log('🔄 DEBUG: updateConfig method exists:', typeof uneeqInstance.updateConfig === 'function');
-      
-  //     if (typeof uneeqInstance.updateConfig === 'function') {
-  //       console.log('🔄 DEBUG: Toggle states changed, updating Uneeq configuration for correct captionsPosition');
-        
-  //       try {
-  //         const newPosition = getCaptionsPosition();
-  //         const newConfig = {
-  //           showClosedCaptions: showClosedCaptions || false,
-  //           captionsPosition: newPosition
-  //         };
-          
-  //         console.log('🔄 Updating Uneeq config:', newConfig);
-  //         uneeqInstance.updateConfig(newConfig);
-  //         console.log('🔄 Uneeq configuration updated successfully');
-          
-  //       } catch (error) {
-  //         console.log('🔄 Could not update Uneeq configuration:', error);
-  //         console.log('🔄 Falling back to re-initialization approach');
-  //         triggerReinitialization();
-  //       }
-  //     } else {
-  //       console.log('🔄 DEBUG: updateConfig method not available, falling back to re-initialization');
-  //       triggerReinitialization();
-  //     }
-  //   }
-  // }, [showClosedCaptions]); // Only watch toggle states
+  
 
   // Update large text mode during active sessions using direct SDK method
   useEffect(() => {
@@ -406,7 +371,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
 
     const handleUneeqMessage = (event: any) => {
       const msg = event.detail;
-      console.log('Uneeq message type:', msg.uneeqMessageType, 'Full message:', msg);
+      // console.log('Uneeq message type:', msg.uneeqMessageType, 'Full message:', msg);
       switch (msg.uneeqMessageType) {
         case 'PromptRequest':
           console.log('PromptRequest received - asserting showAssessmentScale to false');
@@ -466,7 +431,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             break;
             
         case 'PromptResult':
-          console.log('PromptResult received - Full message:', msg);
+          // console.log('PromptResult received - Full message:', msg);
+          // Modify this to only send the "final" response
           
           // Handle report response
           if (isRequestingReport && msg.promptResult?.response?.text) {
@@ -495,73 +461,19 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
             }
           }
           
-          // Log the actual text content to see if XML is there
-          /** 
-            if (msg.promptResult && msg.promptResult.response && msg.promptResult.response.text) {
-              console.log('PromptResult text:', msg.promptResult.response.text);
-              // Check for XML in the response text
-              if (msg.promptResult.response.text.includes('<uneeq:displayAssesmentScale />')) {
-                console.log('✅ Found displayAssesmentScale XML in PromptResult response');
-                setInternalShowAssessmentScale(true);
-              }
-              // Check for custom_event XML in the response text
-              if (msg.promptResult.response.text.includes('<uneeq:custom_event name="question_')) {
-                // Extract question number from XML like <uneeq:custom_event name="question_9" />
-                const match = msg.promptResult.response.text.match(/<uneeq:custom_event name="question_(\d+)" \/>/);
-                if (match) {
-                  const questionNum = parseInt(match[1]);
-                  console.log(`✅ Found custom_event XML for question ${questionNum} in PromptResult response - showing assessment scale`);
-                  console.log('🔍 QUESTION NUMBER CHANGE - BEFORE:', {
-                    oldQuestionNumber: currentQuestionNumber,
-                    newQuestionNumber: questionNum,
-                    timestamp: new Date().toISOString()
-                  });
-                  setCurrentQuestionNumber(questionNum);
-                  setInternalShowAssessmentScale(true);
-                  console.log('🔍 QUESTION NUMBER CHANGE - AFTER setState calls:', {
-                    questionNumber: questionNum,
-                    showAssessmentScale: true,
-                    timestamp: new Date().toISOString()
-                  });
-                }
-              }
-            }
-            if (msg.promptResult && msg.promptResult.text) {
-              console.log('PromptResult direct text:', msg.promptResult.text);
-              // Check for XML in the direct text
-              if (msg.promptResult.text.includes('<uneeq:displayAssesmentScale />')) {
-                console.log('✅ Found displayAssesmentScale XML in PromptResult direct text');
-                setInternalShowAssessmentScale(true);
-              }
-              // Check for custom_event XML in the direct text
-              if (msg.promptResult.text.includes('<uneeq:custom_event name="question_')) {
-                // Extract question number from XML like <uneeq:custom_event name="question_9" />
-                const match = msg.promptResult.text.match(/<uneeq:custom_event name="question_(\d+)" \/>/);
-                if (match) {
-                  const questionNum = parseInt(match[1]);
-                  console.log(`✅ Found custom_event XML for question ${questionNum} in PromptResult direct text - showing assessment scale`);
-                  console.log('🔍 QUESTION NUMBER CHANGE (DIRECT TEXT) - BEFORE:', {
-                    oldQuestionNumber: currentQuestionNumber,
-                    newQuestionNumber: questionNum,
-                    timestamp: new Date().toISOString()
-                  });
-                  setCurrentQuestionNumber(questionNum);
-                  setInternalShowAssessmentScale(true);
-                  console.log('🔍 QUESTION NUMBER CHANGE (DIRECT TEXT) - AFTER setState calls:', {
-                    questionNumber: questionNum,
-                    showAssessmentScale: true,
-                    timestamp: new Date().toISOString()
-                  });
-                }
-              }
-            }
-              */
+          
             break;
 
         case 'AvatarStoppedSpeaking':
           console.log('AvatarStoppedSpeaking');
           break;
-          
+        case 'SpeechTranscription':
+          console.log('SpeechTranscription event handler firing')
+          if(msg.speechTranscription.transcript === '') {
+            console.log('Empty speech transcription detected - sending "null" string to trigger proactive repair dialog')
+            uneeqInstance.chatPrompt("null")
+          }
+          break;
         case 'Error':
           // Handle errors more gracefully
           console.warn('Uneeq error:', msg);
