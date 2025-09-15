@@ -870,7 +870,7 @@ export default function Component() {
                   <Button
                     size="sm"
                     onClick={handleDownloadReport}
-                    className="bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/30"
+                    className="bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/30 hidden"
                   >
                     <Download className="w-4 h-4 mr-1" />
                     Export
