@@ -90,6 +90,8 @@ export default function Component() {
     uneeqReportData,
     isRequestingReport,
     requestReport,
+    sessionId,
+    clearSessionId,
     toggleClosedCaptionsDirect,
     toggleLargeTextDirect
   } = useUneeq(undefined, showClosedCaptions, true, showLargeText, selectedPersonaId)
@@ -509,13 +511,14 @@ export default function Component() {
       
       // End the session
       setIsInConversation(false)
+      clearSessionId() // Clear the session ID when session ends
       
       // Show analytics after a short delay
       setTimeout(() => {
         setShowAnalytics(true)
       }, 300)
     }
-  }, [isWaitingForReportBeforeEnd, uneeqReportData, isRequestingReport])
+  }, [isWaitingForReportBeforeEnd, uneeqReportData, isRequestingReport, clearSessionId])
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-['gg_sans','Whitney','Helvetica_Neue',Helvetica,Arial,sans-serif]">
@@ -577,6 +580,17 @@ export default function Component() {
           </div>
         </div>
       </div>
+      
+      {/* Session ID Display */}
+      {sessionId && (
+        <div className="border-b border-gray-700 px-6 py-2">
+          <div className="max-w-7xl mx-auto text-center">
+            <p className={`${showLargeText ? "text-base" : "text-sm"} text-yellow-400 font-medium`}>
+              Session ID: {sessionId}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* PIN Dialog Overlay */}
       {showPinDialog && (

@@ -46,6 +46,7 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     total: number;
   } | null>(null);
   const [isRequestingReport, setIsRequestingReport] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   uneeqScriptStatus = useScript(scriptSrc, {
     id: 'uneeq',
@@ -374,6 +375,11 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
       const msg = event.detail;
       // console.log('Uneeq message type:', msg.uneeqMessageType, 'Full message:', msg);
       switch (msg.uneeqMessageType) {
+        case 'SessionLive':
+          const receivedSessionId = msg.sessionId;
+          console.log('SessionLive received - Session ID:', receivedSessionId);
+          setSessionId(receivedSessionId);
+          break;
         case 'PromptRequest':
           console.log('PromptRequest received - asserting showAssessmentScale to false');
           setInternalShowAssessmentScale(false);
@@ -652,6 +658,10 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     }
   }, [uneeqInstance, avatarLive]);
 
+  const clearSessionId = useCallback(() => {
+    setSessionId(null);
+  }, []);
+
   return {
     scriptStatus: uneeqScriptStatus,
     readyToStart,
@@ -672,6 +682,8 @@ export const useUneeq = (configOverride?: Partial<any>, showClosedCaptions?: boo
     uneeqReportData,
     isRequestingReport,
     requestReport,
+    sessionId,
+    clearSessionId,
     // Direct SDK call functions for immediate updates without re-initialization
     toggleClosedCaptionsDirect,
     toggleLargeTextDirect,
