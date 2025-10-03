@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   User,
   Video,
@@ -25,6 +26,7 @@ import {
   Download,
   X,
   Settings,
+  MessageSquare,
 } from "lucide-react"
 
 // Declare global uneeq variable
@@ -32,6 +34,37 @@ declare global {
   interface Window {
     uneeq: any
   }
+}
+
+// FaceRating component for feedback modal
+const FaceRating = ({
+  rating,
+  selectedRating,
+  onSelect,
+}: { rating: number; selectedRating: number | null; onSelect: (rating: number) => void }) => {
+  const isSelected = selectedRating === rating
+  const faces = [
+    { icon: "😢", color: "from-red-500 to-red-600" },
+    { icon: "😟", color: "from-orange-500 to-orange-600" },
+    { icon: "😐", color: "from-yellow-500 to-yellow-600" },
+    { icon: "🙂", color: "from-green-400 to-green-500" },
+    { icon: "😊", color: "from-green-500 to-green-600" },
+  ]
+
+  const face = faces[rating - 1]
+
+  return (
+    <button
+      onClick={() => onSelect(rating)}
+      className={`flex items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 ${
+        isSelected
+          ? `bg-gradient-to-br ${face.color} border-white/40 shadow-lg`
+          : "border-gray-600 hover:border-gray-500 hover:bg-gray-700/30"
+      }`}
+    >
+      <span className={`transition-all duration-200 ${isSelected ? "text-3xl" : "text-2xl"}`}>{face.icon}</span>
+    </button>
+  )
 }
 
 export default function Component() {
@@ -71,6 +104,9 @@ export default function Component() {
   const [selectedPersonaId, setSelectedPersonaId] = useState("62e50c7d-0f01-44b2-80ce-1467a665ec31")
   const [selectedPersonaName, setSelectedPersonaName] = useState("Mei")
   const [selectedPreviewImage, setSelectedPreviewImage] = useState("images/mei_preview.jpg")
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackRating1, setFeedbackRating1] = useState<number | null>(null)
+  const [feedbackComment, setFeedbackComment] = useState("")
 
   // Initialize Uneeq hook
   const { 
@@ -483,6 +519,26 @@ export default function Component() {
     }, 400)
   }
 
+  const handleCloseFeedback = () => {
+    setIsModalClosing(true)
+    setTimeout(() => {
+      setShowFeedback(false)
+      setFeedbackRating1(null)
+      setFeedbackComment("")
+      setIsModalClosing(false)
+      // Show analytics after feedback
+      setTimeout(() => {
+        setShowAnalytics(true)
+      }, 300)
+    }, 400)
+  }
+
+  const handleSubmitFeedback = () => {
+    // Save feedback data here
+    console.log("Feedback submitted:", { rating: feedbackRating1, comment: feedbackComment })
+    handleCloseFeedback()
+  }
+
   const getResponseColor = (value: number, isCritical = false) => {
     if (isCritical) {
       return "from-red-600/90 to-red-700/90 border-red-400/50" // Enhanced critical styling
@@ -510,9 +566,9 @@ export default function Component() {
       // End the session
       setIsInConversation(false)
       
-      // Show analytics after a short delay
+      // Show feedback modal after a short delay
       setTimeout(() => {
-        setShowAnalytics(true)
+        setShowFeedback(true)
       }, 300)
     }
   }, [isWaitingForReportBeforeEnd, uneeqReportData, isRequestingReport])
@@ -520,6 +576,30 @@ export default function Component() {
   return (
     <div className="min-h-screen bg-gray-950 text-white font-['gg_sans','Whitney','Helvetica_Neue',Helvetica,Arial,sans-serif]">
       <UneeqScript />
+      
+      
+      {/* TEMPORARY DEV BUTTONS - REMOVE BEFORE COMMITTING */}
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <button
+          onClick={() => setShowSurveyModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg"
+        >
+          🧪 Test Survey
+        </button>
+        <button
+          onClick={() => {
+            setIsModalOpening(true)
+            setShowFeedback(true)
+            setTimeout(() => {
+              setIsModalOpening(false)
+            }, 400)
+          }}
+          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg"
+        >
+          💬 Test Feedback
+        </button>
+      </div>
+      
       {/* Header */}
       <div className="border-b border-gray-700 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -1009,6 +1089,82 @@ export default function Component() {
         </div>
       )}
 
+      {/* Feedback Modal */}
+      {showFeedback && (
+        <div
+          className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-400 ease-out ${
+            isModalClosing ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          <Card
+            className={`bg-gray-800 border-gray-700 w-full max-w-md transition-all duration-400 ease-out ${
+              isModalClosing
+                ? "opacity-0 translate-y-6"
+                : "opacity-100 translate-y-0"
+            }`}
+          >
+            <CardHeader className="border-b border-gray-700 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-400/20 to-yellow-400/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-orange-400" />
+                </div>
+                <div className="text-left">
+                  <CardTitle className="text-lg text-white">Session Feedback</CardTitle>
+                  <p className="text-sm text-gray-400 mt-0.5">Help us improve your experience</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5 p-5">
+              {/* Question 1 */}
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-200 font-medium block">How was your overall experience?</Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <FaceRating
+                      key={rating}
+                      rating={rating}
+                      selectedRating={feedbackRating1}
+                      onSelect={setFeedbackRating1}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Question 2 - Text Field */}
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-200 font-medium block">
+                  Additional comments or suggestions (optional)
+                </Label>
+                <Textarea
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  placeholder="Share your thoughts about the session..."
+                  className="min-h-[100px] bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 resize-none focus:border-orange-500 focus:ring-orange-500"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-3 justify-end">
+                <Button
+                  onClick={handleCloseFeedback}
+                  variant="outline"
+                  className="border-gray-600 hover:bg-gray-700 text-white bg-transparent text-sm px-6"
+                >
+                  Skip
+                </Button>
+                <Button
+                  onClick={handleSubmitFeedback}
+                  className="bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white text-sm px-6"
+                  disabled={feedbackRating1 === null}
+                >
+                  Submit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto p-6">
         <div
           className={`grid gap-6 transition-all duration-700 ease-in-out ${
@@ -1043,47 +1199,173 @@ export default function Component() {
                       isInConversation ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                   />
+                  
+                  {/* Loading indicator for script */}
+                  {scriptStatus === 'loading' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+                      <div className="text-center">
+                        <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p className="text-white text-sm">Loading Uneeq SDK...</p>
+                      </div>
+                    </div>
+                  )}
                   {dimAvatarActive && (
                     <div className="absolute inset-0 bg-black/80 pointer-events-none z-40" />
                   )}
 
                   {/* Survey Modal Overlay */}
                   {showSurveyModal && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center">
-                      <div className="absolute inset-0 bg-black/80" />
-                      <div className="relative bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-                        <h3 className="text-xl font-semibold text-white mb-4">Quick Survey</h3>
-                        <div className="space-y-4 text-gray-200">
+                    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+                      <div className="absolute inset-0 bg-black/60" />
+                      <div className="relative bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+                        {/* Header with close button */}
+                        <div className="flex items-center justify-between px-6 py-4">
                           <div>
-                            <p className="mb-2">Did you like talking to me today?</p>
-                            <div className="flex gap-6">
-                              <label className="flex items-center gap-2">
-                                <input type="radio" name="q1" value="Yes" className="accent-orange-500" />
-                                <span>Yes</span>
-                              </label>
-                              <label className="flex items-center gap-2">
-                                <input type="radio" name="q1" value="No" className="accent-orange-500" />
-                                <span>No</span>
-                              </label>
+                            <div className="flex items-center gap-2">
+                              <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                              </svg>
+                              <h2 className="text-lg font-semibold text-white">Quick Survey</h2>
                             </div>
                           </div>
-                          <div>
-                            <p className="mb-2">Would you like to talk to me again next time?</p>
-                            <div className="flex gap-6">
-                              <label className="flex items-center gap-2">
-                                <input type="radio" name="q2" value="Yes" className="accent-orange-500" />
-                                <span>Yes</span>
-                              </label>
-                              <label className="flex items-center gap-2">
-                                <input type="radio" name="q2" value="No" className="accent-orange-500" />
-                                <span>No</span>
-                              </label>
+                          <button
+                            onClick={() => {
+                              sendMessage('cancelled')
+                              setShowSurveyModal(false)
+                            }}
+                            className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-700"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-6 space-y-6">
+                          {/* Question 1 */}
+                          <div className="space-y-3">
+                            <h3 className="text-gray-300 font-normal text-sm">How much did you enjoy talking to me today?</h3>
+                            <div className="flex justify-between">
+                              {[
+                                { rating: 1, icon: 'sad', label: 'Not at all' },
+                                { rating: 2, icon: 'neutral', label: 'A little' },
+                                { rating: 3, icon: 'neutral', label: 'Somewhat' },
+                                { rating: 4, icon: 'happy', label: 'Quite a bit' },
+                                { rating: 5, icon: 'very-happy', label: 'Very much' }
+                              ].map(({ rating, icon, label }) => (
+                                <label key={rating} className="flex flex-col items-center gap-2 cursor-pointer group flex-1">
+                                  <input 
+                                    type="radio" 
+                                    name="q1" 
+                                    value={rating}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-12 h-12 flex items-center justify-center peer-checked:border-2 peer-checked:border-orange-500 peer-checked:rounded-full transition-all duration-200">
+                                    {icon === 'sad' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 16c1.5-2 4.5-2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'neutral' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <line x1="8" y1="15" x2="16" y2="15" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'happy' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 15c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'very-happy' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 14c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                        <path d="M12 16l1 2h-2l1-2z" fill="currentColor"/>
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <span className="text-gray-400 text-xs text-center font-medium">{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Question 2 */}
+                          <div className="space-y-3">
+                            <h3 className="text-gray-300 font-normal text-sm">How likely are you to talk to me again?</h3>
+                            <div className="flex justify-between">
+                              {[
+                                { rating: 1, icon: 'unhappy', label: 'Very unlikely' },
+                                { rating: 2, icon: 'neutral', label: 'Unlikely' },
+                                { rating: 3, icon: 'neutral', label: 'Neutral' },
+                                { rating: 4, icon: 'happy', label: 'Likely' },
+                                { rating: 5, icon: 'very-happy', label: 'Very likely' }
+                              ].map(({ rating, icon, label }) => (
+                                <label key={rating} className="flex flex-col items-center gap-2 cursor-pointer group flex-1">
+                                  <input 
+                                    type="radio" 
+                                    name="q2" 
+                                    value={rating}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-12 h-12 flex items-center justify-center peer-checked:border-2 peer-checked:border-orange-500 peer-checked:rounded-full transition-all duration-200">
+                                    {icon === 'unhappy' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 16c1.5-2 4.5-2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'neutral' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <line x1="8" y1="15" x2="16" y2="15" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'happy' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 15c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                      </svg>
+                                    )}
+                                    {icon === 'very-happy' && (
+                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+                                        <path d="M9 14c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
+                                        <path d="M12 16l1 2h-2l1-2z" fill="currentColor"/>
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <span className="text-gray-400 text-xs text-center font-medium">{label}</span>
+                                </label>
+                              ))}
                             </div>
                           </div>
                         </div>
-                        <div className="mt-6 flex items-center justify-end gap-3">
+                        
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-gray-700 flex items-center justify-end gap-3">
                           <button
-                            className="px-4 py-2 rounded-md border border-gray-600 text-gray-200 hover:bg-gray-700"
+                            className="px-4 py-2 rounded text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
                             onClick={() => {
                               sendMessage('cancelled')
                               setShowSurveyModal(false)
@@ -1092,11 +1374,15 @@ export default function Component() {
                             Cancel
                           </button>
                           <button
-                            className="px-4 py-2 rounded-md bg-orange-500 hover:bg-orange-600 text-white"
+                            className="px-4 py-2 rounded text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-colors"
                             onClick={() => {
                               const q1 = (document.querySelector('input[name="q1"]:checked') as HTMLInputElement | null)?.value || 'No response'
                               const q2 = (document.querySelector('input[name="q2"]:checked') as HTMLInputElement | null)?.value || 'No response'
-                              const payload = `Survey Response:\n- Did you like talking to me today?: ${q1}\n- Would you like to talk to me again next time?: ${q2}`
+                              const q1Labels = ['Not at all', 'A little', 'Somewhat', 'Quite a bit', 'Very much']
+                              const q2Labels = ['Very unlikely', 'Unlikely', 'Neutral', 'Likely', 'Very likely']
+                              const q1Text = q1 !== 'No response' ? `${q1}/5 (${q1Labels[parseInt(q1) - 1]})` : 'No response'
+                              const q2Text = q2 !== 'No response' ? `${q2}/5 (${q2Labels[parseInt(q2) - 1]})` : 'No response'
+                              const payload = `Survey Response:\n- How much did you enjoy talking to me today?: ${q1Text}\n- How likely are you to talk to me again?: ${q2Text}`
                               sendMessage(payload)
                               setShowSurveyModal(false)
                             }}
