@@ -107,6 +107,9 @@ export default function Component() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackRating1, setFeedbackRating1] = useState<number | null>(null)
   const [feedbackComment, setFeedbackComment] = useState("")
+  const [surveyRating1, setSurveyRating1] = useState<number | null>(null)
+  const [surveyRating2, setSurveyRating2] = useState<number | null>(null)
+  const [surveyComment, setSurveyComment] = useState("")
 
   // Initialize Uneeq hook
   const { 
@@ -578,27 +581,6 @@ export default function Component() {
       <UneeqScript />
       
       
-      {/* TEMPORARY DEV BUTTONS - REMOVE BEFORE COMMITTING */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <button
-          onClick={() => setShowSurveyModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg"
-        >
-          🧪 Test Survey
-        </button>
-        <button
-          onClick={() => {
-            setIsModalOpening(true)
-            setShowFeedback(true)
-            setTimeout(() => {
-              setIsModalOpening(false)
-            }, 400)
-          }}
-          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg"
-        >
-          💬 Test Feedback
-        </button>
-      </div>
       
       {/* Header */}
       <div className="border-b border-gray-700 px-6 py-4">
@@ -1217,178 +1199,109 @@ export default function Component() {
                   {showSurveyModal && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
                       <div className="absolute inset-0 bg-black/60" />
-                      <div className="relative bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+                      <div className="relative bg-gray-800 border border-gray-700 rounded-lg shadow-2xl w-full max-w-md mx-4 overflow-hidden">
                         {/* Header with close button */}
-                        <div className="flex items-center justify-between px-6 py-4">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                              </svg>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400/20 to-yellow-400/20 rounded-full flex items-center justify-center flex-shrink-0">
+                              <MessageSquare className="w-5 h-5 text-orange-400" />
+                            </div>
+                            <div className="text-left">
                               <h2 className="text-lg font-semibold text-white">Quick Survey</h2>
+                              <p className="text-sm text-gray-400 mt-0.5">Help us improve your experience</p>
                             </div>
                           </div>
                           <button
                             onClick={() => {
                               sendMessage('cancelled')
                               setShowSurveyModal(false)
+                              // Reset survey state
+                              setSurveyRating1(null)
+                              setSurveyRating2(null)
+                              setSurveyComment("")
                             }}
                             className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-700"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="w-5 h-5" />
                           </button>
                         </div>
                         
                         {/* Content */}
-                        <div className="p-6 space-y-6">
-                          {/* Question 1 */}
-                          <div className="space-y-3">
-                            <h3 className="text-gray-300 font-normal text-sm">How much did you enjoy talking to me today?</h3>
-                            <div className="flex justify-between">
-                              {[
-                                { rating: 1, icon: 'sad', label: 'Not at all' },
-                                { rating: 2, icon: 'neutral', label: 'A little' },
-                                { rating: 3, icon: 'neutral', label: 'Somewhat' },
-                                { rating: 4, icon: 'happy', label: 'Quite a bit' },
-                                { rating: 5, icon: 'very-happy', label: 'Very much' }
-                              ].map(({ rating, icon, label }) => (
-                                <label key={rating} className="flex flex-col items-center gap-2 cursor-pointer group flex-1">
-                                  <input 
-                                    type="radio" 
-                                    name="q1" 
-                                    value={rating}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-12 h-12 flex items-center justify-center peer-checked:border-2 peer-checked:border-orange-500 peer-checked:rounded-full transition-all duration-200">
-                                    {icon === 'sad' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 16c1.5-2 4.5-2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'neutral' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <line x1="8" y1="15" x2="16" y2="15" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'happy' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 15c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'very-happy' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 14c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                        <path d="M12 16l1 2h-2l1-2z" fill="currentColor"/>
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <span className="text-gray-400 text-xs text-center font-medium">{label}</span>
-                                </label>
+                        <div className="p-6 space-y-5">
+                          {/* Question 1 - EXACTLY like feedback modal */}
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-200 font-medium block">How much did you enjoy talking to me today?</Label>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[1, 2, 3, 4, 5].map((rating) => (
+                                <button
+                                  key={rating}
+                                  onClick={() => setSurveyRating1(rating)}
+                                  className={`flex items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 ${
+                                    surveyRating1 === rating
+                                      ? `bg-gradient-to-br from-orange-400 to-yellow-500 border-white/40 shadow-lg`
+                                      : "border-gray-600 hover:border-gray-500 hover:bg-gray-700/30"
+                                  }`}
+                                >
+                                  <span className={`transition-all duration-200 ${surveyRating1 === rating ? "text-3xl" : "text-2xl"}`}>
+                                    {rating === 1 && '😢'}
+                                    {rating === 2 && '😟'}
+                                    {rating === 3 && '😐'}
+                                    {rating === 4 && '🙂'}
+                                    {rating === 5 && '😊'}
+                                  </span>
+                                </button>
                               ))}
                             </div>
                           </div>
                           
-                          {/* Question 2 */}
-                          <div className="space-y-3">
-                            <h3 className="text-gray-300 font-normal text-sm">How likely are you to talk to me again?</h3>
-                            <div className="flex justify-between">
-                              {[
-                                { rating: 1, icon: 'unhappy', label: 'Very unlikely' },
-                                { rating: 2, icon: 'neutral', label: 'Unlikely' },
-                                { rating: 3, icon: 'neutral', label: 'Neutral' },
-                                { rating: 4, icon: 'happy', label: 'Likely' },
-                                { rating: 5, icon: 'very-happy', label: 'Very likely' }
-                              ].map(({ rating, icon, label }) => (
-                                <label key={rating} className="flex flex-col items-center gap-2 cursor-pointer group flex-1">
-                                  <input 
-                                    type="radio" 
-                                    name="q2" 
-                                    value={rating}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-12 h-12 flex items-center justify-center peer-checked:border-2 peer-checked:border-orange-500 peer-checked:rounded-full transition-all duration-200">
-                                    {icon === 'unhappy' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 16c1.5-2 4.5-2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'neutral' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <line x1="8" y1="15" x2="16" y2="15" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'happy' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 15c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                      </svg>
-                                    )}
-                                    {icon === 'very-happy' && (
-                                      <svg className="w-8 h-8 text-gray-400 peer-checked:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                                        <circle cx="9" cy="9" r="1" fill="currentColor"/>
-                                        <circle cx="15" cy="9" r="1" fill="currentColor"/>
-                                        <path d="M9 14c1.5 2 4.5 2 6 0" strokeWidth="2" strokeLinecap="round"/>
-                                        <path d="M12 16l1 2h-2l1-2z" fill="currentColor"/>
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <span className="text-gray-400 text-xs text-center font-medium">{label}</span>
-                                </label>
-                              ))}
-                            </div>
+
+                          {/* Comment Section - EXACTLY like feedback modal */}
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-200 font-medium block">
+                              Additional comments or suggestions (optional)
+                            </Label>
+                            <Textarea
+                              value={surveyComment}
+                              onChange={(e) => setSurveyComment(e.target.value)}
+                              placeholder="Share your thoughts about the session..."
+                              className="min-h-[100px] bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 resize-none focus:border-orange-500 focus:ring-orange-500"
+                            />
                           </div>
                         </div>
                         
-                        {/* Footer */}
-                        <div className="px-6 py-4 border-t border-gray-700 flex items-center justify-end gap-3">
-                          <button
-                            className="px-4 py-2 rounded text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+                        {/* Footer - EXACTLY like feedback modal */}
+                        <div className="px-6 py-4 flex items-center justify-end gap-3">
+                          <Button
                             onClick={() => {
                               sendMessage('cancelled')
                               setShowSurveyModal(false)
+                              // Reset survey state
+                              setSurveyRating1(null)
+                              setSurveyRating2(null)
+                              setSurveyComment("")
                             }}
+                            variant="outline"
+                            className="border-gray-600 hover:bg-gray-700 text-white bg-transparent text-sm px-6"
                           >
-                            Cancel
-                          </button>
-                          <button
-                            className="px-4 py-2 rounded text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+                            Skip
+                          </Button>
+                          <Button
                             onClick={() => {
-                              const q1 = (document.querySelector('input[name="q1"]:checked') as HTMLInputElement | null)?.value || 'No response'
-                              const q2 = (document.querySelector('input[name="q2"]:checked') as HTMLInputElement | null)?.value || 'No response'
                               const q1Labels = ['Not at all', 'A little', 'Somewhat', 'Quite a bit', 'Very much']
-                              const q2Labels = ['Very unlikely', 'Unlikely', 'Neutral', 'Likely', 'Very likely']
-                              const q1Text = q1 !== 'No response' ? `${q1}/5 (${q1Labels[parseInt(q1) - 1]})` : 'No response'
-                              const q2Text = q2 !== 'No response' ? `${q2}/5 (${q2Labels[parseInt(q2) - 1]})` : 'No response'
-                              const payload = `Survey Response:\n- How much did you enjoy talking to me today?: ${q1Text}\n- How likely are you to talk to me again?: ${q2Text}`
+                              const q1Text = surveyRating1 ? `${surveyRating1}/5 (${q1Labels[surveyRating1 - 1]})` : 'No response'
+                              const payload = `Survey Response:\n- How much did you enjoy talking to me today?: ${q1Text}${surveyComment ? `\n- Additional comments: ${surveyComment}` : ''}`
                               sendMessage(payload)
                               setShowSurveyModal(false)
+                              // Reset survey state
+                              setSurveyRating1(null)
+                              setSurveyRating2(null)
+                              setSurveyComment("")
                             }}
+                            className="bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white text-sm px-6"
+                            disabled={!surveyRating1}
                           >
                             Submit
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
